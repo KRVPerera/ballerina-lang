@@ -462,7 +462,7 @@ public class TypeChecker extends BLangNodeVisitor {
                 literalType = symTable.decimalType;
                 literalExpr.value = numericLiteral;
             } else if (expType.tag == TypeTags.FLOAT) {
-                literalExpr.value = Double.parseDouble(String.valueOf(numericLiteral));
+                literalExpr.value = Double.parseDouble(numericLiteral);
             } else if (expType.tag == TypeTags.FINITE && types.isAssignableToFiniteType(expType, literalExpr)) {
                 BFiniteType finiteType = (BFiniteType) expType;
                 if (literalAssignableToFiniteType(literalExpr, finiteType, TypeTags.FLOAT)) {
@@ -2132,7 +2132,7 @@ public class TypeChecker extends BLangNodeVisitor {
 
     private BRecordType getWaitForAllExprReturnType(List<BLangWaitForAllExpr.BLangWaitKeyValue> keyVals) {
         BRecordType retType = new BRecordType(null);
-        
+
         for (BLangWaitForAllExpr.BLangWaitKeyValue keyVal : keyVals) {
             BLangIdentifier fieldName;
             if (keyVal.valueExpr == null || keyVal.valueExpr.getKind() != NodeKind.SIMPLE_VARIABLE_REF) {
@@ -3212,11 +3212,7 @@ public class TypeChecker extends BLangNodeVisitor {
             return false;
         }
 
-        if (isFunctionPointer(funcSymbol)) {
-            return false;
-        }
-
-        return true;
+        return !isFunctionPointer(funcSymbol);
     }
 
     private boolean isFunctionPointer(BSymbol funcSymbol) {
@@ -3955,10 +3951,7 @@ public class TypeChecker extends BLangNodeVisitor {
         if (computedKey) {
             checkExpr(keyExpr, this.env, symTable.stringType);
 
-            if (keyExpr.type == symTable.semanticError) {
-                return false;
-            }
-            return true;
+            return keyExpr.type != symTable.semanticError;
         } else if (keyExpr.getKind() == NodeKind.SIMPLE_VARIABLE_REF ||
                 (keyExpr.getKind() == NodeKind.LITERAL && ((BLangLiteral) keyExpr).type.tag == TypeTags.STRING)) {
             return true;
@@ -4184,7 +4177,7 @@ public class TypeChecker extends BLangNodeVisitor {
 
         // If there's only one member, and the one an only member is:
         //    a) nilType OR
-        //    b) not-nullable 
+        //    b) not-nullable
         // then return that only member, as the return type.
         if (unionType.getMemberTypes().size() == 1) {
             return unionType.getMemberTypes().toArray(new BType[0])[0];
