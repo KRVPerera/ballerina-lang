@@ -45,7 +45,6 @@ public class ObjectTypeReferenceTest {
     public void testSimpleObjectTypeReferenceSemanticsNegative_1() {
         CompileResult negativeResult = BCompileUtil.compile("test-src/object/object-type-reference-1-semantics" +
                 "-negative.bal");
-        Assert.assertEquals(negativeResult.getErrorCount(), 12);
         int i = 0;
         BAssertUtil.validateError(negativeResult, i++, "incompatible types: 'Employee1' is not an abstract object", 32,
                 6);
@@ -60,10 +59,10 @@ public class ObjectTypeReferenceTest {
                 "function through referenced type 'ObjectWithFunction'", 120, 5);
         BAssertUtil.validateError(negativeResult, i++, "redeclared symbol 'getName': trying to copy a duplicate " +
                 "function through referenced type 'ObjectWithRedeclaredFunction_1'", 125, 6);
-        BAssertUtil.validateError(negativeResult, i++, "redeclared symbol 'x'", 134, 6);
-        BAssertUtil.validateError(negativeResult, i++, "unknown type 'Baz'", 142, 6);
-        BAssertUtil.validateError(negativeResult, i++, "unknown type 'Tar'", 146, 6);
-        BAssertUtil.validateError(negativeResult, i, "redeclared symbol 'xyz'", 167, 6);
+        BAssertUtil.validateError(negativeResult, i++, "unknown type 'Baz'", 129, 6);
+        BAssertUtil.validateError(negativeResult, i++, "unknown type 'Tar'", 133, 6);
+        BAssertUtil.validateError(negativeResult, i++, "redeclared symbol 'xyz'", 154, 6);
+        Assert.assertEquals(negativeResult.getErrorCount(), i);
     }
 
     @Test
@@ -164,6 +163,11 @@ public class ObjectTypeReferenceTest {
     }
 
     @Test
+    public void testCreatingObjectWithOverriddenFields() {
+        BRunUtil.invoke(compileResult, "testCreatingObjectWithOverriddenFields");
+    }
+
+    @Test
     public void testTypeReferencedFunctionImplementation() {
         CompileResult result = BCompileUtil.compile("test-src/object/object_func_reference_neg.bal");
         int index = 0;
@@ -214,5 +218,10 @@ public class ObjectTypeReferenceTest {
         BAssertUtil.validateError(result, index,
                                   "incompatible type reference 'abc:Baz': a referenced object cannot have non-public " +
                                           "fields or methods", 22, 6);
+    }
+
+    @Test
+    public void testCreatingObjectWithOverriddenMethods() {
+        BRunUtil.invoke(compileResult, "testCreatingObjectWithOverriddenMethods");
     }
 }
