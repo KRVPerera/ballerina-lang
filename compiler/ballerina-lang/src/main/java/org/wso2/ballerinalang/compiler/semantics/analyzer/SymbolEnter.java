@@ -1435,7 +1435,7 @@ public class SymbolEnter extends BLangNodeVisitor {
                     defineNode(f, objMethodsEnv);
                 });
 
-                List<String> referencedFunctions = new ArrayList<>();
+                Set<String> referencedFunctions = new HashSet<>();
                 // Add the attached functions of the referenced types to this object.
                 // Here it is assumed that all the attached functions of the referred type are
                 // resolved by the time we reach here. It is achieved by ordering the typeDefs
@@ -1857,17 +1857,12 @@ public class SymbolEnter extends BLangNodeVisitor {
                 return Stream.empty();
             }
 
-//            List<BSymbol> referenceSymbols = new ArrayList<>();
-//            getAllReferences((BLangType) referredType.tsymbol.type, referenceSymbols);
-
             // Check for duplicate type references
-            if (referencedTypes.contains(referredType.tsymbol)) {
+            if (!referencedTypes.add(referredType.tsymbol)) {
                 dlog.error(typeRef.pos, DiagnosticCode.REDECLARED_TYPE_REFERENCE, typeRef);
                 invalidTypeRefs.add(typeRef);
                 return Stream.empty();
             }
-
-            referencedTypes.add(referredType.tsymbol);
 
             // Here it is assumed that all the fields of the referenced types are resolved
             // by the time we reach here. It is achieved by ordering the typeDefs according
@@ -1894,18 +1889,19 @@ public class SymbolEnter extends BLangNodeVisitor {
     }
 
     private void defineReferencedFunction(BLangTypeDefinition typeDef, SymbolEnv objEnv, BLangType typeRef,
-                                          BAttachedFunction referencedFunc, List<String> referencedFunctions) {
+                                          BAttachedFunction referencedFunc,
+                                          Set<String> referencedFunctions) {
         String referencedFuncName = referencedFunc.funcName.value;
+
         Name funcName = names.fromString(
                 Symbols.getAttachedFuncSymbolName(typeDef.symbol.name.value, referencedFuncName));
         BSymbol matchingObjFuncSym = symResolver.lookupSymbolInMainSpace(objEnv, funcName);
 
         if (matchingObjFuncSym != symTable.notFoundSymbol) {
-            if (referencedFunctions.contains(referencedFuncName)) {
+            if (!referencedFunctions.add(referencedFuncName)) {
                 dlog.error(typeRef.pos, DiagnosticCode.REDECLARED_SYMBOL, referencedFuncName);
                 return;
             }
-            referencedFunctions.add(referencedFuncName);
 
             if (Symbols.isFunctionDeclaration(matchingObjFuncSym) && Symbols.isFunctionDeclaration(
                     referencedFunc.symbol)) {
@@ -1916,10 +1912,11 @@ public class SymbolEnter extends BLangNodeVisitor {
                            referencedFunc.funcName, typeRef);
             }
 
-            if (!hasSameFunctionSignature((BInvokableSymbol) matchingObjFuncSym, referencedFunc.symbol)) {
+            if (!isFunctionAssignable((BInvokableSymbol) matchingObjFuncSym, referencedFunc.symbol)) {
                 Optional<BLangFunction> matchingFunc = ((BLangObjectTypeNode) typeDef.typeNode)
                         .functions.stream().filter(fn -> fn.symbol == matchingObjFuncSym).findFirst();
                 DiagnosticPos pos = matchingFunc.isPresent() ? matchingFunc.get().pos : typeRef.pos;
+                // TODO : change error message - cannot overried - Rukshanx
                 dlog.error(pos, DiagnosticCode.REFERRED_FUNCTION_SIGNATURE_MISMATCH,
                            getCompleteFunctionSignature(referencedFunc.symbol),
                            getCompleteFunctionSignature((BInvokableSymbol) matchingObjFuncSym));
@@ -1954,12 +1951,12 @@ public class SymbolEnter extends BLangNodeVisitor {
         ((BObjectTypeSymbol) typeDef.symbol).referencedFunctions.add(attachedFunc);
     }
 
-    private boolean hasSameFunctionSignature(BInvokableSymbol attachedFuncSym, BInvokableSymbol referencedFuncSym) {
+    private boolean isFunctionAssignable(BInvokableSymbol attachedFuncSym, BInvokableSymbol referencedFuncSym) {
         if (!hasSameVisibilityModifier(referencedFuncSym.flags, attachedFuncSym.flags)) {
             return false;
         }
 
-        if (!types.isSameType(referencedFuncSym.type, attachedFuncSym.type)) {
+        if (!types.isAssignable(referencedFuncSym.type, attachedFuncSym.type)) {
             return false;
         }
 
