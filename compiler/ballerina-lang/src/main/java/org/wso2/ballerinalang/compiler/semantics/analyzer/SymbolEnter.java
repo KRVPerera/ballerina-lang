@@ -1871,11 +1871,7 @@ public class SymbolEnter extends BLangNodeVisitor {
             return ((BStructureType) referredType).fields.stream().filter(f -> {
                 if (fieldNames.containsKey(f.name.value)) {
                     BLangSimpleVariable existingVariable = fieldNames.get(f.name.value);
-                    boolean isAssignable = types.isAssignable(f.type, existingVariable.type);
-                    if (!isAssignable) {
-                        // TODO : give an error message - Rukshan
-                    }
-                    return !isAssignable;
+                    return !types.isAssignable(f.type, existingVariable.type);
                 }
                 return true;
             }).map(field -> {
@@ -1916,7 +1912,6 @@ public class SymbolEnter extends BLangNodeVisitor {
                 Optional<BLangFunction> matchingFunc = ((BLangObjectTypeNode) typeDef.typeNode)
                         .functions.stream().filter(fn -> fn.symbol == matchingObjFuncSym).findFirst();
                 DiagnosticPos pos = matchingFunc.isPresent() ? matchingFunc.get().pos : typeRef.pos;
-                // TODO : change error message - cannot overried - Rukshanx
                 dlog.error(pos, DiagnosticCode.REFERRED_FUNCTION_SIGNATURE_MISMATCH,
                            getCompleteFunctionSignature(referencedFunc.symbol),
                            getCompleteFunctionSignature((BInvokableSymbol) matchingObjFuncSym));
