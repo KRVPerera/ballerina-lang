@@ -14,6 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import ballerina/lang.'int;
+
 type Person1 abstract object {
     public int age;
     public string name;
@@ -173,10 +175,10 @@ type DefaultPerson object {
 
 function testCreatingObjectWithOverriddenFields() {
     DefaultPerson dummyPerson = new DefaultPerson();
-    test:assertEquals(dummyPerson.age, 18);
+    assertEquality(dummyPerson.age, 18);
     dummyPerson.age = 400;
-    test:assertEquals(dummyPerson.age, 400);
-    test:assertEquals(dummyPerson.name, "UNKNOWN");
+    assertEquality(dummyPerson.age, 400);
+    assertEquality(dummyPerson.name, "UNKNOWN");
 }
 
 type NameInterface abstract object {
@@ -211,8 +213,23 @@ type DefaultPersonGreetedName object {
 
 function testCreatingObjectWithOverriddenMethods() {
     DefaultPersonGreetedName dummyPerson = new DefaultPersonGreetedName(name="Doe");
-    test:assertEquals(dummyPerson.age, 18);
+    assertEquality(dummyPerson.age, 18);
     int age = dummyPerson.setAge(80);
-    test:assertEquals(dummyPerson.age, 80);
-    test:assertEquals(dummyPerson.getName(), "Hello Doe");
+    assertEquality(dummyPerson.age, 80);
+    assertEquality(dummyPerson.getName(), "Hello Doe");
+}
+
+const ASSERTION_ERROR_REASON = "AssertionError";
+
+function assertEquality(any|error actual, any|error expected) {
+    if expected is anydata && actual is anydata && expected == actual {
+        return;
+    }
+
+    if expected === actual {
+        return;
+    }
+
+    panic error(ASSERTION_ERROR_REASON,
+                message = "expected '" + expected.toString() + "', found '" + actual.toString () + "'");
 }
