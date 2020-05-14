@@ -1892,10 +1892,8 @@ public class SymbolEnter extends BLangNodeVisitor {
     }
 
     private void defineReferencedFunction(BLangTypeDefinition typeDef, SymbolEnv objEnv, BLangType typeRef,
-                                          BAttachedFunction referencedFunc,
-                                          Set<String> referencedFunctions) {
+                                          BAttachedFunction referencedFunc, Set<String> referencedFunctions) {
         String referencedFuncName = referencedFunc.funcName.value;
-
         Name funcName = names.fromString(
                 Symbols.getAttachedFuncSymbolName(typeDef.symbol.name.value, referencedFuncName));
         BSymbol matchingObjFuncSym = symResolver.lookupSymbolInMainSpace(objEnv, funcName);
