@@ -1380,7 +1380,7 @@ public class SymbolEnter extends BLangNodeVisitor {
                 if (field.symbol.type == symTable.semanticError) {
                     continue;
                 }
-                structureType.fields.add(new BField(names.fromIdNode(field.name), field.pos, field.symbol));
+                structureType.fields.values().add(new BField(names.fromIdNode(field.name), field.pos, field.symbol));
             }
 
             if (typeDef.symbol.kind != SymbolKind.RECORD) {
@@ -1808,6 +1808,12 @@ public class SymbolEnter extends BLangNodeVisitor {
         List<BSymbol> referencedTypes = new ArrayList<>();
         List<BLangType> invalidTypeRefs = new ArrayList<>();
         // Get the inherited fields from the type references
+
+        Map<String, BLangSimpleVariable> fieldNames = new HashMap<>();
+        for (BLangSimpleVariable fieldVariable : structureTypeNode.fields) {
+            fieldNames.put(fieldVariable.name.value, fieldVariable);
+        }
+
         structureTypeNode.referencedFields = structureTypeNode.typeRefs.stream().flatMap(typeRef -> {
             BType referredType = symResolver.resolveTypeNode(typeRef, typeDefEnv);
             if (referredType == symTable.semanticError) {
@@ -1868,14 +1874,13 @@ public class SymbolEnter extends BLangNodeVisitor {
             // by the time we reach here. It is achieved by ordering the typeDefs according
             // to the precedence.
             // Default values of fields are not inherited.
-            return ((BStructureType) referredType).fields.stream().filter(f -> {
+            return ((BStructureType) referredType).fields.values().stream().filter(f -> {
                 if (fieldNames.containsKey(f.name.value)) {
                     BLangSimpleVariable existingVariable = fieldNames.get(f.name.value);
                     return !types.isAssignable(f.type, existingVariable.type);
                 }
                 return true;
             }).map(field -> {
-            return ((BStructureType) referredType).fields.values().stream().map(field -> {
                 BLangSimpleVariable var = ASTBuilderUtil.createVariable(typeRef.pos, field.name.value, field.type);
                 var.flagSet = field.symbol.getFlags();
                 return var;
@@ -1885,10 +1890,8 @@ public class SymbolEnter extends BLangNodeVisitor {
     }
 
     private void defineReferencedFunction(BLangTypeDefinition typeDef, SymbolEnv objEnv, BLangType typeRef,
-                                          BAttachedFunction referencedFunc,
-                                          Set<String> referencedFunctions) {
+                                          BAttachedFunction referencedFunc, Set<String> referencedFunctions) {
         String referencedFuncName = referencedFunc.funcName.value;
-
         Name funcName = names.fromString(
                 Symbols.getAttachedFuncSymbolName(typeDef.symbol.name.value, referencedFuncName));
         BSymbol matchingObjFuncSym = symResolver.lookupSymbolInMainSpace(objEnv, funcName);
