@@ -28,6 +28,7 @@ import org.ballerinalang.model.tree.NodeKind;
 import org.ballerinalang.model.tree.TopLevelNode;
 import org.ballerinalang.model.tree.TypeDefinition;
 import org.ballerinalang.model.tree.statements.StatementNode;
+import org.ballerinalang.model.tree.types.TypeNode;
 import org.ballerinalang.util.diagnostic.DiagnosticCode;
 import org.wso2.ballerinalang.compiler.PackageLoader;
 import org.wso2.ballerinalang.compiler.SourceDirectory;
@@ -366,7 +367,6 @@ public class SymbolEnter extends BLangNodeVisitor {
             // the location as well since the same unknown type can be specified in multiple places.
             LinkedList<LocationData> unknownTypes = new LinkedList<>();
             for (TypeDefinition unresolvedType : unresolvedTypes) {
-                System.out.println(unresolvedType);
                 // We need to keep track of all visited types to print cyclic dependency.
                 LinkedList<String> references = new LinkedList<>();
                 references.add(unresolvedType.getName().getValue());
@@ -700,12 +700,16 @@ public class SymbolEnter extends BLangNodeVisitor {
                 // Do nothing.
                 break;
             case RECORD_TYPE:
-                String name = ((BLangRecordTypeNode) currentTypeNode).toString();
-                System.out.println("SymbolEnter : 695 " + name);
+                List<? extends TypeNode> typeReferences = ((BLangRecordTypeNode) currentTypeNode).getTypeReferences();
+                for (TypeNode typeNode : typeReferences) {
+                    checkErrors(unresolvedType, (BLangType) typeNode, visitedNodes, encounteredUnknownTypes);
+                }
                 break;
             case OBJECT_TYPE:
-                name = ((BLangObjectTypeNode) currentTypeNode).toString();
-                System.out.println("SymbolEnter : 699 " + name);
+                typeReferences = ((BLangObjectTypeNode) currentTypeNode).getTypeReferences();
+                for (TypeNode typeNode : typeReferences) {
+                    checkErrors(unresolvedType, (BLangType) typeNode, visitedNodes, encounteredUnknownTypes);
+                }
                 break;
             default:
                 throw new RuntimeException("unhandled type kind: " + currentTypeNode.getKind());
