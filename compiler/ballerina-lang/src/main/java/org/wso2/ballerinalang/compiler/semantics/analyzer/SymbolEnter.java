@@ -357,7 +357,7 @@ public class SymbolEnter extends BLangNodeVisitor {
                 .forEach(varSymbol -> varSymbol.tag = SymTag.ENDPOINT);
     }
 
-    private void detectCycles(HashSet<? extends TypeDefinition> typeDefinitions, SymbolEnv pkgEnv) {
+    private void detectCycles(HashSet<? extends TypeDefinition> typeDefinitions, SymbolEnv env) {
         if (typeDefinitions.size() <= unresolvedTypes.size()) {
             // This situation can occur due to either a cyclic dependency or at least one of member types in type
             // definition node cannot be resolved. So we iterate through each node recursively looking for cyclic
@@ -675,7 +675,6 @@ public class SymbolEnter extends BLangNodeVisitor {
                                                                      currentTypeNode.pos.sCol);
                         if (!encounteredUnknownTypes.add(locationData)) {
                             dlog.error(currentTypeNode.pos, DiagnosticCode.UNKNOWN_TYPE, currentTypeNodeName);
-                            encounteredUnknownTypes.add(locationData);
                         }
                     } else {
                         for (TypeDefinition typeDefinition : typeDefinitions) {
@@ -1833,6 +1832,13 @@ public class SymbolEnter extends BLangNodeVisitor {
                 return Stream.empty();
             }
 
+            // Check for duplicate type references
+            if (!referencedTypes.add(referredType.tsymbol)) {
+                dlog.error(typeRef.pos, DiagnosticCode.REDECLARED_TYPE_REFERENCE, typeRef);
+                invalidTypeRefs.add(typeRef);
+                return Stream.empty();
+            }
+
             if (structureTypeNode.type.tag == TypeTags.OBJECT) {
                 if (referredType.tag != TypeTags.OBJECT ||
                         !Symbols.isFlagOn(referredType.tsymbol.flags, Flags.ABSTRACT)) {
@@ -1865,13 +1871,6 @@ public class SymbolEnter extends BLangNodeVisitor {
 
             if (structureTypeNode.type.tag == TypeTags.RECORD && referredType.tag != TypeTags.RECORD) {
                 dlog.error(typeRef.pos, DiagnosticCode.INCOMPATIBLE_RECORD_TYPE_REFERENCE, typeRef);
-                invalidTypeRefs.add(typeRef);
-                return Stream.empty();
-            }
-
-            // Check for duplicate type references
-            if (!referencedTypes.add(referredType.tsymbol)) {
-                dlog.error(typeRef.pos, DiagnosticCode.REDECLARED_TYPE_REFERENCE, typeRef);
                 invalidTypeRefs.add(typeRef);
                 return Stream.empty();
             }
