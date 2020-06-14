@@ -243,8 +243,8 @@ public class AnnotationAttachmentTest {
         assertAnnotationNameAndKeyValuePair(attachments.get(0), "v13", "strTwo", "two");
     }
 
-    private void assertAnnotationNameAndKeyValuePair(BLangAnnotationAttachment attachment, String annotName, String fieldName,
-                                                     Object value) {
+    private void assertAnnotationNameAndKeyValuePair(BLangAnnotationAttachment attachment, String annotName,
+                                                     String fieldName, Object value) {
         Assert.assertEquals(attachment.annotationName.getValue(), annotName);
         BLangExpression expression = getActualExpressionFromAnnotationAttachmentExpr(attachment.expr);
         Assert.assertEquals(expression.getKind(), NodeKind.RECORD_LITERAL_EXPR);
