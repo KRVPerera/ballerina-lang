@@ -24,12 +24,12 @@ public type BasicAuthHandler object {
     *InboundAuthHandler;
     *OutboundAuthHandler;
 
-    public auth:InboundAuthProvider|auth:OutboundAuthProvider authProvider;
+    public readonly (auth:InboundAuthProvider|auth:OutboundAuthProvider) authProvider;
 
     # Initializes the `BasicAuthHandler` object.
     #
     # + authProvider - The `auth:InboundAuthProvider` instance or the `auth:OutboundAuthProvider` instance
-    public function init(auth:InboundAuthProvider|auth:OutboundAuthProvider authProvider) {
+    public function init(readonly & (auth:InboundAuthProvider|auth:OutboundAuthProvider) authProvider) {
         self.authProvider = authProvider;
     }
 

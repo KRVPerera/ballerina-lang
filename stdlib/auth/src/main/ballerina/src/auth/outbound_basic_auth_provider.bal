@@ -30,12 +30,12 @@ public type OutboundBasicAuthProvider object {
 
     *OutboundAuthProvider;
 
-    public Credential? credential;
+    public readonly Credential? credential;
 
     # Provides authentication based on the provided Basic Auth configurations.
     #
     # + credential - Credential configurations
-    public function init(Credential? credential = ()) {
+    public function init(readonly & Credential? credential = ()) {
         self.credential = credential;
     }
 

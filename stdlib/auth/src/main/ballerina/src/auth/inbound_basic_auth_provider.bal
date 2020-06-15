@@ -36,12 +36,12 @@ public type InboundBasicAuthProvider object {
 
     *InboundAuthProvider;
 
-    public BasicAuthConfig basicAuthConfig;
+    public readonly BasicAuthConfig basicAuthConfig;
 
     # Provides authentication based on the provided configurations.
     #
     # + basicAuthConfig - Basic Auth provider configurations
-    public function init(BasicAuthConfig? basicAuthConfig = ()) {
+    public function init(readonly & BasicAuthConfig? basicAuthConfig = ()) {
         if (basicAuthConfig is BasicAuthConfig) {
             self.basicAuthConfig = basicAuthConfig;
         } else {
