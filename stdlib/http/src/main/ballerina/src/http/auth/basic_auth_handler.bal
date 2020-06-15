@@ -19,12 +19,12 @@ import ballerina/auth;
 # Defines the Basic Auth header handler for inbound and outbound HTTP traffic.
 #
 # + authProvider - The AuthProvider instance
-public type BasicAuthHandler object {
+public type BasicAuthHandler readonly object {
 
     *InboundAuthHandler;
     *OutboundAuthHandler;
 
-    public readonly (auth:InboundAuthProvider|auth:OutboundAuthProvider) authProvider;
+    public auth:InboundAuthProvider|auth:OutboundAuthProvider authProvider;
 
     # Initializes the `BasicAuthHandler` object.
     #
