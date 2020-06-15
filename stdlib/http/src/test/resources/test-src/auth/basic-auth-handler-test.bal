@@ -65,6 +65,8 @@ public type CustomAuthProvider object {
 
     *auth:InboundAuthProvider;
 
+    private readonly boolean isReadOnly = true;
+
     public function authenticate(string credential) returns boolean|auth:Error {
         return credential == "aXN1cnU6eHh4";
     }
