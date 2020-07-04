@@ -45,13 +45,16 @@ public class BObjectType extends BStructureType implements ObjectType {
 
     public BIntersectionType immutableType;
     public BObjectType mutableType = null;
+    public BTypeIdSet typeIdSet;
 
     public BObjectType(BTypeSymbol tSymbol) {
         super(TypeTags.OBJECT, tSymbol);
+        this.typeIdSet = BTypeIdSet.emptySet();
     }
 
     public BObjectType(BTypeSymbol tSymbol, int flags) {
         super(TypeTags.OBJECT, tSymbol, flags);
+        this.typeIdSet = BTypeIdSet.emptySet();
     }
 
     @Override
@@ -75,6 +78,7 @@ public class BObjectType extends BStructureType implements ObjectType {
         if (tsymbol.name.value.startsWith(DOLLAR)) {
             StringBuilder sb = new StringBuilder();
             sb.append(OBJECT).append(SPACE).append(LEFT_CURL);
+            sb.append(SPACE).append(typeIdSet.toString());
             for (BField field : fields.values()) {
                 if (Symbols.isFlagOn(field.symbol.flags, Flags.PUBLIC)) {
                     sb.append(SPACE).append(PUBLIC);
@@ -101,5 +105,16 @@ public class BObjectType extends BStructureType implements ObjectType {
     @Override
     public BIntersectionType getImmutableType() {
         return this.immutableType;
+    }
+
+
+    public BTypeIdSet getTypeIdSet() {
+
+        return typeIdSet;
+    }
+
+    public void setTypeIdSet(BTypeIdSet typeIdSet) {
+
+        this.typeIdSet = typeIdSet;
     }
 }

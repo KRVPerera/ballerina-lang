@@ -21,6 +21,7 @@ import org.ballerinalang.model.elements.PackageID;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -104,14 +105,7 @@ public class BTypeIdSet {
 
     @Override
     public int hashCode() {
-        int hashCode = 1;
-        for (BTypeId bTypeId : primary) {
-            hashCode = hashCode * 31 + bTypeId.hashCode();
-        }
-        for (BTypeId bTypeId : secondary) {
-            hashCode = hashCode * 31 + bTypeId.hashCode();
-        }
-        return hashCode;
+        return Objects.hash(primary, secondary);
     }
 
     public boolean isEmpty() {
@@ -157,7 +151,7 @@ public class BTypeIdSet {
 
         @Override
         public String toString() {
-            return "BTypeId { " + packageID.toString() + "/" + name + "}";
+            return "TypeId { " + packageID.toString() + "/" + name + "}";
         }
     }
 }

@@ -355,6 +355,9 @@ public class BIRTypeWriter implements TypeVisitor {
             DocAttachmentWriter.writeMarkdownDocAttachment(buff, field.symbol.markdownDocumentation, cp);
             writeTypeCpIndex(field.type);
         }
+//        if (tSymbol.kind == SymbolKind.OBJECT) {
+//        }
+        writeTypeIds(bObjectType.typeIdSet);
         List<BAttachedFunction> attachedFuncs;
         //TODO cleanup, there cannot be objects without attached function list and symbol kind other than object
         if (tSymbol.kind == SymbolKind.OBJECT) {

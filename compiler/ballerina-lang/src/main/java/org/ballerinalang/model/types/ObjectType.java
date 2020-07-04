@@ -17,10 +17,15 @@
 */
 package org.ballerinalang.model.types;
 
+import org.wso2.ballerinalang.compiler.semantics.model.types.BTypeIdSet;
+
 /**
  * {@code ObjectType} represents the type of a object in Ballerina.
  *
  * @since 0.971.0
  */
 public interface ObjectType extends SelectivelyImmutableReferenceType {
+
+    BTypeIdSet getTypeIdSet();
+    void setTypeIdSet(BTypeIdSet typeIdSet);
 }

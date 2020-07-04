@@ -972,6 +972,7 @@ public class SymbolResolver extends BLangNodeVisitor {
         objectSymbol.type = objectType;
         objectTypeNode.symbol = objectSymbol;
 
+        objectType.typeIdSet = BTypeIdSet.emptySet();
         resultType = objectType;
     }
 

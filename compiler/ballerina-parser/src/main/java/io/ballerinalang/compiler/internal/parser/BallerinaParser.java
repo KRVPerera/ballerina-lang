@@ -579,6 +579,8 @@ public class BallerinaParser extends AbstractParser {
                 return parseRecordKeyword();
             case LIST_MATCH_PATTERN_MEMBER_RHS:
                 return parseListMatchPatternMemberRhs();
+            case DISTINCT_KEYWORD:
+                return parseDistinctKeyword();
             // case RECORD_BODY_END:
             // case OBJECT_MEMBER_WITHOUT_METADATA:
             // case REMOTE_CALL_OR_ASYNC_SEND_END:
@@ -2281,6 +2283,7 @@ public class BallerinaParser extends AbstractParser {
                 SyntaxKind nextNextTokenKind = nextNextToken.kind;
                 if (nextNextTokenKind != SyntaxKind.OBJECT_KEYWORD &&
                         nextNextTokenKind != SyntaxKind.ABSTRACT_KEYWORD &&
+                        nextNextTokenKind != SyntaxKind.DISTINCT_KEYWORD &&
                         nextNextTokenKind != SyntaxKind.CLIENT_KEYWORD) {
                     return parseSimpleTypeDescriptor();
                 }
@@ -5128,6 +5131,9 @@ public class BallerinaParser extends AbstractParser {
             case READONLY_KEYWORD:
                 firstQualifier = parseReadonlyKeyword();
                 break;
+            case DISTINCT_KEYWORD:
+                firstQualifier = parseDistinctKeyword();
+                break;
             case OBJECT_KEYWORD:
                 return STNodeFactory.createEmptyNodeList();
             default:
@@ -5171,6 +5177,9 @@ public class BallerinaParser extends AbstractParser {
                     break;
                 case READONLY_KEYWORD:
                     nextQualifier = parseReadonlyKeyword();
+                    break;
+                case DISTINCT_KEYWORD:
+                    nextQualifier = parseDistinctKeyword();
                     break;
                 case OBJECT_KEYWORD:
                 default:

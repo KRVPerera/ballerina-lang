@@ -1444,13 +1444,14 @@ public class Desugar extends BLangNodeVisitor {
             return;
         }
 
-        BType detailMapType;
-        BType detailType = ((BErrorType) parentErrorVariable.type).detailType;
-        if (detailType.tag == TypeTags.MAP) {
-            detailMapType = detailType;
-        } else {
-            detailMapType = symTable.detailType;
-        }
+        // TODO: remove dead code
+//        BType detailMapType;
+//        BType detailType = ((BErrorType) parentErrorVariable.type).detailType;
+//        if (detailType.tag == TypeTags.MAP) {
+//            detailMapType = detailType;
+//        } else {
+//            detailMapType = symTable.detailType;
+//        }
 
         parentErrorVariable.detailExpr = generateErrorDetailBuiltinFunction(
                 parentErrorVariable.pos,

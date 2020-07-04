@@ -391,6 +391,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.ballerinalang.model.elements.Flag.DISTINCT;
 import static org.ballerinalang.model.elements.Flag.SERVICE;
 import static org.ballerinalang.model.elements.Flag.TRANSACTIONAL;
 import static org.wso2.ballerinalang.compiler.util.Constants.OPEN_SEALED_ARRAY_INDICATOR;
@@ -788,7 +789,7 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
     @Override
     public BLangNode transform(DistinctTypeDescriptorNode distinctTypeDesc) {
         BLangType typeNode = createTypeNode(distinctTypeDesc.typeDescriptor());
-        typeNode.flagSet.add(Flag.DISTINCT);
+        typeNode.flagSet.add(DISTINCT);
         return typeNode;
     }
 
@@ -811,6 +812,10 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
 
             if (qualifier.kind() == SyntaxKind.SERVICE_KEYWORD) {
                 objectTypeNode.flagSet.add(SERVICE);
+            }
+
+            if (qualifier.kind() == SyntaxKind.DISTINCT_KEYWORD) {
+                objectTypeNode.flagSet.add(DISTINCT);
             }
         }
 

@@ -20,9 +20,12 @@ package org.ballerinalang.jvm;
 import org.ballerinalang.jvm.scheduling.Scheduler;
 import org.ballerinalang.jvm.scheduling.State;
 import org.ballerinalang.jvm.scheduling.Strand;
+import org.ballerinalang.jvm.types.BErrorType;
 import org.ballerinalang.jvm.types.BField;
+import org.ballerinalang.jvm.types.BObjectType;
 import org.ballerinalang.jvm.types.BPackage;
 import org.ballerinalang.jvm.types.BRecordType;
+import org.ballerinalang.jvm.types.BTypeIdSet;
 import org.ballerinalang.jvm.util.Flags;
 import org.ballerinalang.jvm.values.MapValue;
 import org.ballerinalang.jvm.values.MapValueImpl;
@@ -122,6 +125,11 @@ public class BallerinaValues {
                 currentStrand.setState(prevState);
             }
         }
+
+        BObjectType type = objectValue.getType();
+        BTypeIdSet typeIdSet = new BTypeIdSet();
+        typeIdSet.add(packageId, objectTypeName, true);
+        type.setTypeIdSet(typeIdSet);
         return objectValue;
     }
 

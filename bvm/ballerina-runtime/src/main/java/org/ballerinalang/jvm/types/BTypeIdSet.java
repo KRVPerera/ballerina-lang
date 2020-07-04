@@ -89,5 +89,14 @@ public class BTypeIdSet {
             }
             return false;
         }
+
+        @Override
+        public String toString() {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(pkg.toString()).append(" ");
+            stringBuilder.append(name).append(" ");
+            stringBuilder.append(isPrimary);
+            return stringBuilder.toString();
+        }
     }
 }

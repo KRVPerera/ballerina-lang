@@ -36,6 +36,7 @@ public class BObjectType extends BStructureType {
 
     private final boolean readonly;
     private BIntersectionType immutableType;
+    private BTypeIdSet typeIdSet;
 
     /**
      * Create a {@code BObjectType} which represents the user defined struct type.
@@ -95,6 +96,10 @@ public class BObjectType extends BStructureType {
 
         StringJoiner sj = new StringJoiner(",\n\t", name + " {\n\t", "\n}");
 
+        if (typeIdSet != null) {
+            sj.add(this.typeIdSet.toString());
+        }
+
         for (Entry<String, BField> field : getFields().entrySet()) {
             sj.add(field.getKey() + " : " + field.getValue().type);
         }
@@ -104,6 +109,16 @@ public class BObjectType extends BStructureType {
         }
 
         return sj.toString();
+    }
+
+    public BTypeIdSet getTypeIdSet() {
+
+        return typeIdSet;
+    }
+
+    public void setTypeIdSet(BTypeIdSet typeIdSet) {
+
+        this.typeIdSet = typeIdSet;
     }
 
     @Override

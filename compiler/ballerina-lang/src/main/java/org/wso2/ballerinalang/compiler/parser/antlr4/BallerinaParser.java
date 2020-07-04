@@ -4177,11 +4177,11 @@ public class BallerinaParser extends Parser {
 						_localctx = new IntersectionTypeNameLabelContext(new TypeNameContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_typeName);
 						setState(1018);
-						if (!(precpred(_ctx, 8))) throw new FailedPredicateException(this, "precpred(_ctx, 8)");
+						if (!(precpred(_ctx, 9))) throw new FailedPredicateException(this, "precpred(_ctx, 9)");
 						setState(1019);
 						match(BIT_AND);
 						setState(1020);
-						typeName(9);
+						typeName(10);
 						}
 						break;
 					case 2:
@@ -4239,7 +4239,7 @@ public class BallerinaParser extends Parser {
 						_localctx = new UnionTypeNameLabelContext(new TypeNameContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_typeName);
 						setState(1032);
-						if (!(precpred(_ctx, 9))) throw new FailedPredicateException(this, "precpred(_ctx, 9)");
+						if (!(precpred(_ctx, 8))) throw new FailedPredicateException(this, "precpred(_ctx, 8)");
 						setState(1035); 
 						_errHandler.sync(this);
 						_alt = 1;
@@ -19961,11 +19961,11 @@ public class BallerinaParser extends Parser {
 	private boolean typeName_sempred(TypeNameContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 1:
-			return precpred(_ctx, 8);
+			return precpred(_ctx, 9);
 		case 2:
 			return precpred(_ctx, 10);
 		case 3:
-			return precpred(_ctx, 9);
+			return precpred(_ctx, 8);
 		case 4:
 			return precpred(_ctx, 7);
 		}
@@ -20589,25 +20589,25 @@ public class BallerinaParser extends Parser {
 		"\u03fb\3\2\2\2\u03f7\u03fb\5`\61\2\u03f8\u03fb\5f\64\2\u03f9\u03fb\5z"+
 		">\2\u03fa\u03d6\3\2\2\2\u03fa\u03db\3\2\2\2\u03fa\u03df\3\2\2\2\u03fa"+
 		"\u03e1\3\2\2\2\u03fa\u03f7\3\2\2\2\u03fa\u03f8\3\2\2\2\u03fa\u03f9\3\2"+
-		"\2\2\u03fb\u0415\3\2\2\2\u03fc\u03fd\f\n\2\2\u03fd\u03fe\7\u0088\2\2\u03fe"+
-		"\u0414\5^\60\13\u03ff\u0406\f\f\2\2\u0400\u0403\7q\2\2\u0401\u0404\5\u018e"+
-		"\u00c8\2\u0402\u0404\7z\2\2\u0403\u0401\3\2\2\2\u0403\u0402\3\2\2\2\u0403"+
-		"\u0404\3\2\2\2\u0404\u0405\3\2\2\2\u0405\u0407\7r\2\2\u0406\u0400\3\2"+
-		"\2\2\u0407\u0408\3\2\2\2\u0408\u0406\3\2\2\2\u0408\u0409\3\2\2\2\u0409"+
-		"\u0414\3\2\2\2\u040a\u040d\f\13\2\2\u040b\u040c\7\u0091\2\2\u040c\u040e"+
-		"\5^\60\2\u040d\u040b\3\2\2\2\u040e\u040f\3\2\2\2\u040f\u040d\3\2\2\2\u040f"+
-		"\u0410\3\2\2\2\u0410\u0414\3\2\2\2\u0411\u0412\f\t\2\2\u0412\u0414\7s"+
-		"\2\2\u0413\u03fc\3\2\2\2\u0413\u03ff\3\2\2\2\u0413\u040a\3\2\2\2\u0413"+
-		"\u0411\3\2\2\2\u0414\u0417\3\2\2\2\u0415\u0413\3\2\2\2\u0415\u0416\3\2"+
-		"\2\2\u0416_\3\2\2\2\u0417\u0415\3\2\2\2\u0418\u0419\7\r\2\2\u0419\u041d"+
-		"\7m\2\2\u041a\u041c\5h\65\2\u041b\u041a\3\2\2\2\u041c\u041f\3\2\2\2\u041d"+
-		"\u041b\3\2\2\2\u041d\u041e\3\2\2\2\u041e\u0420\3\2\2\2\u041f\u041d\3\2"+
-		"\2\2\u0420\u0421\7n\2\2\u0421a\3\2\2\2\u0422\u0430\7q\2\2\u0423\u0428"+
-		"\5^\60\2\u0424\u0425\7l\2\2\u0425\u0427\5^\60\2\u0426\u0424\3\2\2\2\u0427"+
-		"\u042a\3\2\2\2\u0428\u0426\3\2\2\2\u0428\u0429\3\2\2\2\u0429\u042d\3\2"+
-		"\2\2\u042a\u0428\3\2\2\2\u042b\u042c\7l\2\2\u042c\u042e\5d\63\2\u042d"+
-		"\u042b\3\2\2\2\u042d\u042e\3\2\2\2\u042e\u0431\3\2\2\2\u042f\u0431\5d"+
-		"\63\2\u0430\u0423\3\2\2\2\u0430\u042f\3\2\2\2\u0431\u0432\3\2\2\2\u0432"+
+		"\2\2\u03fb\u0415\3\2\2\2\u03fc\u03fd\f\13\2\2\u03fd\u03fe\7\u0088\2\2"+
+		"\u03fe\u0414\5^\60\f\u03ff\u0406\f\f\2\2\u0400\u0403\7q\2\2\u0401\u0404"+
+		"\5\u018e\u00c8\2\u0402\u0404\7z\2\2\u0403\u0401\3\2\2\2\u0403\u0402\3"+
+		"\2\2\2\u0403\u0404\3\2\2\2\u0404\u0405\3\2\2\2\u0405\u0407\7r\2\2\u0406"+
+		"\u0400\3\2\2\2\u0407\u0408\3\2\2\2\u0408\u0406\3\2\2\2\u0408\u0409\3\2"+
+		"\2\2\u0409\u0414\3\2\2\2\u040a\u040d\f\n\2\2\u040b\u040c\7\u0091\2\2\u040c"+
+		"\u040e\5^\60\2\u040d\u040b\3\2\2\2\u040e\u040f\3\2\2\2\u040f\u040d\3\2"+
+		"\2\2\u040f\u0410\3\2\2\2\u0410\u0414\3\2\2\2\u0411\u0412\f\t\2\2\u0412"+
+		"\u0414\7s\2\2\u0413\u03fc\3\2\2\2\u0413\u03ff\3\2\2\2\u0413\u040a\3\2"+
+		"\2\2\u0413\u0411\3\2\2\2\u0414\u0417\3\2\2\2\u0415\u0413\3\2\2\2\u0415"+
+		"\u0416\3\2\2\2\u0416_\3\2\2\2\u0417\u0415\3\2\2\2\u0418\u0419\7\r\2\2"+
+		"\u0419\u041d\7m\2\2\u041a\u041c\5h\65\2\u041b\u041a\3\2\2\2\u041c\u041f"+
+		"\3\2\2\2\u041d\u041b\3\2\2\2\u041d\u041e\3\2\2\2\u041e\u0420\3\2\2\2\u041f"+
+		"\u041d\3\2\2\2\u0420\u0421\7n\2\2\u0421a\3\2\2\2\u0422\u0430\7q\2\2\u0423"+
+		"\u0428\5^\60\2\u0424\u0425\7l\2\2\u0425\u0427\5^\60\2\u0426\u0424\3\2"+
+		"\2\2\u0427\u042a\3\2\2\2\u0428\u0426\3\2\2\2\u0428\u0429\3\2\2\2\u0429"+
+		"\u042d\3\2\2\2\u042a\u0428\3\2\2\2\u042b\u042c\7l\2\2\u042c\u042e\5d\63"+
+		"\2\u042d\u042b\3\2\2\2\u042d\u042e\3\2\2\2\u042e\u0431\3\2\2\2\u042f\u0431"+
+		"\5d\63\2\u0430\u0423\3\2\2\2\u0430\u042f\3\2\2\2\u0431\u0432\3\2\2\2\u0432"+
 		"\u0433\7r\2\2\u0433c\3\2\2\2\u0434\u0435\5^\60\2\u0435\u0436\7\u0090\2"+
 		"\2\u0436e\3\2\2\2\u0437\u0438\7\r\2\2\u0438\u043c\7u\2\2\u0439\u043b\5"+
 		"h\65\2\u043a\u0439\3\2\2\2\u043b\u043e\3\2\2\2\u043c\u043a\3\2\2\2\u043c"+

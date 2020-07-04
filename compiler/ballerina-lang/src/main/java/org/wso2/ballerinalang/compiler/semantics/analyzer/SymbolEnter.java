@@ -809,15 +809,23 @@ public class SymbolEnter extends BLangNodeVisitor {
         typeDefSymbol.name = names.fromIdNode(typeDefinition.getName());
         typeDefSymbol.pkgID = env.enclPkg.packageID;
 
-        boolean distinctFlagPresent = isDistinctFlagPresent(typeDefinition);
-
         // todo: need to handle intersections
-        if (distinctFlagPresent) {
-            if (definedType.getKind() == TypeKind.ERROR) {
+        if (isDistinctFlagPresent(typeDefinition)) {
+            TypeKind definedTypeKind = definedType.getKind();
+            if (definedTypeKind == TypeKind.ERROR) {
+
                 BErrorType distinctType = getDistinctErrorType(typeDefinition, (BErrorType) definedType, typeDefSymbol);
                 typeDefinition.typeNode.type = distinctType;
                 definedType = distinctType;
-            } else if (definedType.getKind() == TypeKind.UNION) {
+
+            } else if (definedTypeKind == TypeKind.OBJECT) {
+
+                BObjectType distinctObjectType = getDistinctObjectType(typeDefinition, (BObjectType) definedType,
+                        typeDefSymbol);
+                typeDefinition.typeNode.type = distinctObjectType;
+                definedType = distinctObjectType;
+
+            } else if (definedTypeKind == TypeKind.UNION) {
                 validateUnionForDistinctType((BUnionType) definedType, typeDefinition.pos);
             } else {
                 dlog.error(typeDefinition.pos, DiagnosticCode.DISTINCT_TYPING_ONLY_SUPPORT_OBJECTS_AND_ERRORS);
@@ -862,6 +870,26 @@ public class SymbolEnter extends BLangNodeVisitor {
         }
     }
 
+    private BObjectType getDistinctObjectType(BLangTypeDefinition typeDefinition, BObjectType definedType, BTypeSymbol typeDefSymbol) {
+        BObjectType definedObjectType = definedType;
+        // Create a new type for distinct type definition such as `type FooErr distinct BarErr;`
+        // `typeDefSymbol` is different to `definedErrorType.tsymbol` in a type definition statement that use
+        // already defined type as the base type.
+        if (definedType.tsymbol != typeDefSymbol) {
+            BObjectType bObjectType = new BObjectType(typeDefSymbol, definedObjectType.flags);
+            bObjectType.fields = definedObjectType.fields;
+            bObjectType.immutableType = definedObjectType.immutableType;
+            bObjectType.mutableType = definedObjectType.mutableType;
+//            bObjectType.
+//            bObjectType. = definedObjectType.fields;
+            typeDefSymbol.type = bObjectType;
+            definedObjectType = bObjectType;
+        }
+        boolean isPublicType = typeDefinition.flagSet.contains(Flag.PUBLIC);
+        definedObjectType.typeIdSet = calculateTypeIdSet(typeDefinition, isPublicType, definedType.typeIdSet);
+        return definedObjectType;
+    }
+
     private void validateUnionForDistinctType(BUnionType definedType, DiagnosticPos pos) {
         Set<BType> memberTypes = definedType.getMemberTypes();
         TypeKind firstTypeKind = null;
@@ -869,7 +897,6 @@ public class SymbolEnter extends BLangNodeVisitor {
             TypeKind typeKind = type.getKind();
             if (firstTypeKind == null && (typeKind == TypeKind.ERROR || typeKind == TypeKind.OBJECT)) {
                 firstTypeKind = typeKind;
-
             }
             if (typeKind != firstTypeKind) {
                 dlog.error(pos, DiagnosticCode.DISTINCT_TYPING_ONLY_SUPPORT_OBJECTS_AND_ERRORS);
