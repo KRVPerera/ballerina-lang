@@ -18,6 +18,7 @@
 package org.wso2.ballerinalang.compiler.semantics.analyzer;
 
 import org.ballerinalang.compiler.CompilerPhase;
+import org.ballerinalang.jvm.values.api.BObject;
 import org.ballerinalang.model.TreeBuilder;
 import org.ballerinalang.model.elements.Flag;
 import org.ballerinalang.model.elements.MarkdownDocAttachment;
@@ -351,6 +352,9 @@ public class SymbolEnter extends BLangNodeVisitor {
 
         // Define error details
         defineErrorDetails(pkgNode.typeDefinitions, pkgEnv);
+
+        // TODO : Define distinct type ids
+//        defineDistinctObjects(pkgNode.typeDefinitions, pkgEnv);
 
         // Define type def fields (if any)
         defineFields(pkgNode.typeDefinitions, pkgEnv);
@@ -813,12 +817,11 @@ public class SymbolEnter extends BLangNodeVisitor {
         if (isDistinctFlagPresent(typeDefinition)) {
             TypeKind definedTypeKind = definedType.getKind();
             if (definedTypeKind == TypeKind.ERROR) {
-
                 BErrorType distinctType = getDistinctErrorType(typeDefinition, (BErrorType) definedType, typeDefSymbol);
                 typeDefinition.typeNode.type = distinctType;
                 definedType = distinctType;
 
-            } else if (definedTypeKind == TypeKind.OBJECT) {
+            } else if (definedTypeKind == TypeKind.OBJECT){
 
                 BObjectType distinctObjectType = getDistinctObjectType(typeDefinition, (BObjectType) definedType,
                         typeDefSymbol);
@@ -872,21 +875,20 @@ public class SymbolEnter extends BLangNodeVisitor {
 
     private BObjectType getDistinctObjectType(BLangTypeDefinition typeDefinition, BObjectType definedType, BTypeSymbol typeDefSymbol) {
         BObjectType definedObjectType = definedType;
-        // Create a new type for distinct type definition such as `type FooErr distinct BarErr;`
-        // `typeDefSymbol` is different to `definedErrorType.tsymbol` in a type definition statement that use
-        // already defined type as the base type.
+
+        // Occurance of a `distinct T`.typeid ==> d
         if (definedType.tsymbol != typeDefSymbol) {
-            BObjectType bObjectType = new BObjectType(typeDefSymbol, definedObjectType.flags);
+            BObjectType bObjectType = new BObjectType(typeDefSymbol);
             bObjectType.fields = definedObjectType.fields;
             bObjectType.immutableType = definedObjectType.immutableType;
             bObjectType.mutableType = definedObjectType.mutableType;
-//            bObjectType.
-//            bObjectType. = definedObjectType.fields;
+
             typeDefSymbol.type = bObjectType;
             definedObjectType = bObjectType;
         }
-        boolean isPublicType = typeDefinition.flagSet.contains(Flag.PUBLIC);
-        definedObjectType.typeIdSet = calculateTypeIdSet(typeDefinition, isPublicType, definedType.typeIdSet);
+        definedObjectType.typeIdSet = calculateObjectTypeIdSet(typeDefinition, env.enclPkg.packageID, definedType.typeIdSet);
+//        typeDefinition.typeNode.type = definedObjectType;
+//        typeDefinition.typeNode.type = definedObjectType;
         return definedObjectType;
     }
 
@@ -928,6 +930,26 @@ public class SymbolEnter extends BLangNodeVisitor {
                 : typeDefinition.getName().value;
 
         return BTypeIdSet.from(env.enclPkg.packageID, name, isPublicType, secondary);
+    }
+
+    private BTypeIdSet calculateObjectTypeIdSet(BLangTypeDefinition typeDefinition,
+                                                PackageID packageID,
+                                                BTypeIdSet secondary) {
+        String name = typeDefinition.flagSet.contains(Flag.ANONYMOUS)
+                ? anonymousModelHelper.getNextDistinctObjectId(packageID)
+                : typeDefinition.getName().value;
+        boolean isPublicType = typeDefinition.flagSet.contains(Flag.PUBLIC);
+        return BTypeIdSet.from(packageID, name, isPublicType, secondary);
+    }
+
+    private BTypeIdSet calculateObjectTypeIdSet(BLangTypeDefinition typeDefinition,
+                                                PackageID packageID,
+                                                Set<BTypeIdSet.BTypeId> secondary) {
+        String name = typeDefinition.flagSet.contains(Flag.ANONYMOUS)
+                ? anonymousModelHelper.getNextDistinctObjectId(packageID)
+                : typeDefinition.getName().value;
+        boolean isPublicType = typeDefinition.flagSet.contains(Flag.PUBLIC);
+        return BTypeIdSet.from(packageID, name, isPublicType, secondary);
     }
 
     private boolean isDistinctFlagPresent(BLangTypeDefinition typeDefinition) {
@@ -1643,6 +1665,8 @@ public class SymbolEnter extends BLangNodeVisitor {
             if (typeDef.typeNode.getKind() == NodeKind.OBJECT_TYPE) {
                 BObjectType objectType = (BObjectType) typeDef.symbol.type;
 
+                boolean distinctObject = isDistinctFlagPresent(typeDef);
+
                 if (objectType.mutableType != null) {
                     // If this is an object type definition defined for an immutable type.
                     // We skip defining methods here since they would either be defined already, or would be defined
@@ -1661,6 +1685,7 @@ public class SymbolEnter extends BLangNodeVisitor {
                     defineNode(f, objMethodsEnv);
                 });
 
+                Set<BTypeIdSet.BTypeId> includedTypeIds = new HashSet<>();
                 Set<String> includedFunctionNames = new HashSet<>();
                 // Add the attached functions of the referenced types to this object.
                 // Here it is assumed that all the attached functions of the referred type are
@@ -1671,11 +1696,26 @@ public class SymbolEnter extends BLangNodeVisitor {
                         continue;
                     }
 
+                    BObjectType referencedObject = (BObjectType) typeRef.type;
+//                    if (distinctObject && !referencedObject.typeIdSet.isPublicTypeIdSet) {
+                    // TODO: check only from different module
+                    if (!referencedObject.typeIdSet.isPublicTypeIdSet) {
+                        dlog.error(objTypeNode.pos, DiagnosticCode.INVALID_PRIVATE_TYPE_ID, objectType,
+                                referencedObject);
+                        objTypeNode.type = symTable.semanticError;
+                        return;
+                    }
+
+                    includedTypeIds.addAll(referencedObject.typeIdSet.primary);
+
                     List<BAttachedFunction> functions = ((BObjectTypeSymbol) typeRef.type.tsymbol).attachedFuncs;
                     for (BAttachedFunction function : functions) {
                         defineReferencedFunction(typeDef, objMethodsEnv, typeRef, function, includedFunctionNames);
                     }
                 }
+
+                // third argument is included type-ids
+                objectType.typeIdSet = calculateObjectTypeIdSet(typeDef, pkgEnv.enclPkg.packageID, includedTypeIds);
             }
         }
     }

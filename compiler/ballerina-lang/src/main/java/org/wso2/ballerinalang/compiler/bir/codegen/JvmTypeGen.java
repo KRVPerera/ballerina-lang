@@ -18,6 +18,7 @@
 package org.wso2.ballerinalang.compiler.bir.codegen;
 
 import org.ballerinalang.compiler.BLangCompilerException;
+import org.ballerinalang.jvm.values.api.BObject;
 import org.ballerinalang.model.elements.PackageID;
 import org.ballerinalang.model.types.SelectivelyImmutableReferenceType;
 import org.objectweb.asm.ClassWriter;
@@ -307,6 +308,7 @@ class JvmTypeGen {
                         addObjectAttachedFunctions(mv, objectTypeSymbol.attachedFuncs, objectType, indexMap,
                                 symbolTable);
                         addImmutableType(mv, objectType);
+                        addTypeIdSet(mv, objectType);
                     }
                     break;
                 case TypeTags.ERROR:
@@ -317,13 +319,7 @@ class JvmTypeGen {
                     loadType(mv, ((BErrorType) bType).detailType);
                     mv.visitMethodInsn(INVOKEVIRTUAL, ERROR_TYPE, SET_DETAIL_TYPE_METHOD,
                             String.format("(L%s;)V", BTYPE), false);
-                    BTypeIdSet typeIdSet = ((BErrorType) bType).typeIdSet;
-                    if (!typeIdSet.isEmpty()) {
-                        mv.visitInsn(DUP);
-                        loadTypeIdSet(mv, typeIdSet);
-                        mv.visitMethodInsn(INVOKEVIRTUAL, ERROR_TYPE, SET_TYPEID_SET_METHOD,
-                                String.format("(L%s;)V", TYPE_ID_SET), false);
-                    }
+                    addTypeIdSet(mv, bType);
                     break;
             }
 
@@ -333,6 +329,26 @@ class JvmTypeGen {
         }
 
         return funcNames;
+    }
+
+    private static void addTypeIdSet(MethodVisitor mv, BType bType) {
+        BTypeIdSet typeIdSet;
+        String type;
+        if (bType.tag == TypeTags.ERROR) {
+            typeIdSet = ((BErrorType) bType).typeIdSet;
+            type = ERROR_TYPE;
+        } else if (bType.tag == TypeTags.OBJECT) {
+            typeIdSet = ((BObjectType) bType).typeIdSet;
+            type = OBJECT_TYPE;
+        } else {
+            return;
+        }
+        if (!typeIdSet.isEmpty()) {
+            mv.visitInsn(DUP);
+            loadTypeIdSet(mv, typeIdSet);
+            mv.visitMethodInsn(INVOKEVIRTUAL, type, SET_TYPEID_SET_METHOD,
+                    String.format("(L%s;)V", TYPE_ID_SET), false);
+        }
     }
 
     private static void addImmutableType(MethodVisitor mv, BStructureType structureType) {

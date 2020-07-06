@@ -33,6 +33,7 @@ public class BTypeIdSet {
     public final Set<BTypeId> primary;
     public final Set<BTypeId> secondary;
     private Set<BTypeId> all = null;
+    public boolean isPublicTypeIdSet;
 
     private static final Set<BTypeId> emptySet = Collections.unmodifiableSet(new HashSet<>());
     private static final BTypeIdSet empty = new BTypeIdSet(emptySet);
@@ -63,8 +64,35 @@ public class BTypeIdSet {
         return new BTypeIdSet(primarySet, secondarySet);
     }
 
+    public static BTypeIdSet from(PackageID packageID, String typeId, boolean publicId, Set<BTypeId> secondary) {
+        HashSet<BTypeId> primarySet = new HashSet<>();
+        primarySet.add(new BTypeId(packageID, typeId, publicId));
+
+        return new BTypeIdSet(primarySet, secondary);
+    }
+
     public static BTypeIdSet emptySet() {
         return empty;
+    }
+
+    private boolean privateIdPresent(Set<BTypeId> idSet) {
+        for (BTypeId id : idSet) {
+            if (!id.publicId) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    // TODO: cache
+    public boolean privateIdPresent() {
+        if (privateIdPresent(this.primary)) {
+            return true;
+        }
+        if (privateIdPresent(this.secondary)) {
+            return true;
+        }
+        return false;
     }
 
     public boolean isAssignableFrom(BTypeIdSet sourceTypeIdSet) {
@@ -113,6 +141,22 @@ public class BTypeIdSet {
             return true;
         }
         return primary.isEmpty() && secondary.isEmpty();
+    }
+
+    // TODO: remove
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("primary type-ids{").append("\n");
+        for (BTypeId id : primary) {
+            stringBuilder.append(id.toString()).append("\n");
+        }
+        stringBuilder.append("}\nsecondary type-ids{").append("\n");
+        for (BTypeId id : secondary) {
+            stringBuilder.append(id.toString()).append("\n");
+        }
+        stringBuilder.append("}\n");
+        return stringBuilder.toString();
     }
 
     /**

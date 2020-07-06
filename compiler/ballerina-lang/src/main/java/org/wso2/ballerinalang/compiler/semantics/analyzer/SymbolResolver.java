@@ -968,11 +968,11 @@ public class SymbolResolver extends BLangNodeVisitor {
             objectType = new BServiceType(objectSymbol);
         } else {
             objectType = isReadOnly ? new BObjectType(objectSymbol, Flags.READONLY) : new BObjectType(objectSymbol);
+            objectType.typeIdSet = BTypeIdSet.emptySet();
         }
         objectSymbol.type = objectType;
         objectTypeNode.symbol = objectSymbol;
 
-        objectType.typeIdSet = BTypeIdSet.emptySet();
         resultType = objectType;
     }
 
