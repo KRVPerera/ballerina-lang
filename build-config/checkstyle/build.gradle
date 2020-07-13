@@ -3,14 +3,30 @@ plugins {
     id 'base'
 }
 
-task downloadFile(type: Download) {
-    src 'https://raw.githubusercontent.com/wso2/code-quality-tools/v1.3/checkstyle/checkstyle.xml'
-    dest buildDir
-    overwrite false
-    outputs.files("$project.buildDir/checkstyle.xml")
+task downloadFile() {
+    def mirrors = [
+            'https://raw.githubusercontent.com/wso2/code-quality-tools/v1.3/checkstyle/checkstyle.xml',
+            'http://localhost/~rukshanp/Ballerina/checkstyle.xml',
+    ] as Queue
+    while (true) {
+        def mirror = mirrors.poll()
+        try {
+            download {
+                src mirror
+                dest buildDir
+                overwrite false
+            }
+            outputs.files("$project.buildDir/checkstyle.xml")
+            break
+        } catch (Exception e) {
+            if (mirrors.isEmpty()) {
+                throw e
+            }
+            logger.warn("Could not download file. Trying next mirror.")
+        }
+    }
 }
 
 artifacts.add('default', file("$project.buildDir/checkstyle.xml")) {
-    builtBy('downloadFile') 
+    builtBy('downloadFile')
 }
-
