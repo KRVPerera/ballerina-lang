@@ -17,6 +17,7 @@
  */
 package org.wso2.ballerinalang.compiler.semantics.analyzer;
 
+import io.ballerinalang.compiler.syntax.tree.ObjectConstructorExpressionNode;
 import org.ballerinalang.compiler.CompilerPhase;
 import org.ballerinalang.model.TreeBuilder;
 import org.ballerinalang.model.elements.Flag;
@@ -102,6 +103,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangConstant;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLambdaFunction;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
+import org.wso2.ballerinalang.compiler.tree.expressions.BLangObjectCtorExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangSimpleVarRef;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLAttribute;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLQName;
@@ -420,6 +422,12 @@ public class SymbolEnter extends BLangNodeVisitor {
 
     private boolean isNullOrEmpty(String s) {
         return s == null || s.isEmpty();
+    }
+
+    @Override
+    public void visit(BLangObjectCtorExpr bLangObjectCtorExpr) {
+
+        super.visit(bLangObjectCtorExpr);
     }
 
     @Override

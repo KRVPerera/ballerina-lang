@@ -121,6 +121,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangMatchExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangMatchExpression.BLangMatchExprPatternClause;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangNamedArgsExpression;
+import org.wso2.ballerinalang.compiler.tree.expressions.BLangObjectCtorExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryAction;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRawTemplateLiteral;
@@ -164,6 +165,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangXMLTextLiteral;
 import org.wso2.ballerinalang.compiler.tree.statements.BLangBlockStmt;
 import org.wso2.ballerinalang.compiler.tree.types.BLangLetVariable;
 import org.wso2.ballerinalang.compiler.tree.types.BLangRecordTypeNode;
+import org.wso2.ballerinalang.compiler.tree.types.BLangUserDefinedType;
 import org.wso2.ballerinalang.compiler.tree.types.BLangValueType;
 import org.wso2.ballerinalang.compiler.util.BArrayState;
 import org.wso2.ballerinalang.compiler.util.ClosureVarSymbol;
@@ -4603,6 +4605,46 @@ public class TypeChecker extends BLangNodeVisitor {
                 dlog.error(varRef.pos, DiagnosticCode.INVALID_RECORD_BINDING_PATTERN, varRef.type);
                 return false;
         }
+    }
+
+    @Override
+    public void visit(BLangObjectCtorExpr objectCtorExpr) {
+
+//        if (expType == symTable.noType) {
+//            resultType = symTable.semanticError;
+//            return;
+//        }
+
+        if (objectCtorExpr.referenceType != null) {
+            BType bType = symResolver.resolveTypeNode(objectCtorExpr.referenceType, env);
+            if (bType.tag != TypeTags.OBJECT) {
+                dlog.error(objectCtorExpr.pos, DiagnosticCode.OBJECT_TYPE_REQUIRED, expType);
+                resultType = symTable.semanticError;
+                return;
+            }
+        }
+
+//        BType type = checkExpr(objectCtorExpr, this.env, expType);
+
+        // TODO : check with lhs and rhs
+        if (expType.tag != TypeTags.OBJECT) {
+            dlog.error(objectCtorExpr.pos, DiagnosticCode.INVALID_TYPE_NEW_LITERAL, expType);
+            resultType = symTable.semanticError;
+            return;
+        }
+
+        BType type = getObjectConstructorType(objectCtorExpr, this.env, expType);
+        resultType = type;
+    }
+
+    private BType getObjectConstructorType(BLangObjectCtorExpr objectCtorExpr, SymbolEnv env, BType expType) {
+        if (expType == symTable.noType) {
+            //TODO: extract a generic object type
+            return objectCtorExpr.objectTypeNode.type;
+        }
+        BType type = types.checkType(objectCtorExpr, objectCtorExpr.objectTypeNode.type, expType);
+
+        return type;
     }
 
     private BType getEffectiveReadOnlyType(DiagnosticPos pos, BType origTargetType) {

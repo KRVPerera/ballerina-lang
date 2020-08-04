@@ -116,6 +116,7 @@ import io.ballerinalang.compiler.syntax.tree.Node;
 import io.ballerinalang.compiler.syntax.tree.NodeList;
 import io.ballerinalang.compiler.syntax.tree.NodeTransformer;
 import io.ballerinalang.compiler.syntax.tree.NonTerminalNode;
+import io.ballerinalang.compiler.syntax.tree.ObjectConstructorExpressionNode;
 import io.ballerinalang.compiler.syntax.tree.ObjectFieldNode;
 import io.ballerinalang.compiler.syntax.tree.ObjectTypeDescriptorNode;
 import io.ballerinalang.compiler.syntax.tree.OnClauseNode;
@@ -296,6 +297,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangMarkdownParameterDo
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangMarkdownReturnParameterDocumentation;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangNamedArgsExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangNumericLiteral;
+import org.wso2.ballerinalang.compiler.tree.expressions.BLangObjectCtorExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryAction;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRawTemplateLiteral;
@@ -896,6 +898,73 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
         }
 
         return deSugarTypeAsUserDefType(objectTypeNode);
+    }
+
+    @Override
+    public BLangNode transform(ObjectConstructorExpressionNode objectConstructorExpressionNode) {
+
+        BLangObjectCtorExpr objectCtorExpression = TreeBuilder.createObjectCtorExpression();
+        objectCtorExpression.pos = getPosition(objectConstructorExpressionNode);
+
+        Optional<MetadataNode> annots = objectConstructorExpressionNode.metadata();
+//        if (annots.isPresent()) {
+//            NodeList<AnnotationNode> annotations = getAnnotations(annots);
+//            if (annotations != null) {
+//                objectCtorExpression.annAttachments = applyAll(annotations);
+//            }
+//        }
+
+        Optional<TypeDescriptorNode> typeDescriptor = objectConstructorExpressionNode.typeDescriptor();
+        BLangObjectTypeNode objectTypeNode = (BLangObjectTypeNode) TreeBuilder.createObjectTypeNode();
+
+        objectTypeNode.pos = objectCtorExpression.pos;
+
+        Optional<Token> objectTypeQualifier = objectConstructorExpressionNode.objectTypeQualifier();
+        objectTypeQualifier.ifPresent(qualifier -> {
+            if (qualifier.kind() == SyntaxKind.CLIENT_KEYWORD) {
+                objectTypeNode.flagSet.add(Flag.CLIENT);
+            } else {
+                DiagnosticPos pos = getPosition(objectConstructorExpressionNode);
+                dlog.error(pos, DiagnosticCode.INVALID_TOKEN);
+            }
+        });
+
+        NodeList<Node> members = objectConstructorExpressionNode.members();
+
+        typeDescriptor.ifPresent(typeDescriptorNode -> {
+            objectCtorExpression.referenceType = createTypeNode(typeDescriptorNode);
+//            members.add(createTypeNode(typeDescriptorNode));
+            objectTypeNode.addTypeReference((BLangType) objectCtorExpression.referenceType);
+        });
+
+        for (Node node : members) {
+            BLangNode bLangNode = node.apply(this);
+            if (bLangNode.getKind() == NodeKind.FUNCTION) {
+                BLangFunction bLangFunction = (BLangFunction) bLangNode;
+                bLangFunction.attachedFunction = true;
+                bLangFunction.flagSet.add(Flag.ATTACHED);
+                if (Names.USER_DEFINED_INIT_SUFFIX.value.equals(bLangFunction.name.value)) {
+                    if (objectTypeNode.initFunction == null) {
+                        bLangFunction.objInitFunction = true;
+                        objectTypeNode.initFunction = bLangFunction;
+                    } else {
+                        objectTypeNode.addFunction(bLangFunction);
+                    }
+                } else {
+                    objectTypeNode.addFunction(bLangFunction);
+                }
+            } else if (bLangNode.getKind() == NodeKind.VARIABLE) {
+                objectTypeNode.addField((BLangSimpleVariable) bLangNode);
+            } else if (bLangNode.getKind() == NodeKind.USER_DEFINED_TYPE) {
+                objectTypeNode.addTypeReference((BLangType) bLangNode);
+            }
+        }
+
+        objectTypeNode.isAnonymous = true;
+
+        objectCtorExpression.objectTypeNode = objectTypeNode;
+
+        return objectCtorExpression;
     }
 
     @Override

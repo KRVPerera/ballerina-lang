@@ -84,6 +84,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangListConstructorExpr
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangMatchExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangNamedArgsExpression;
+import org.wso2.ballerinalang.compiler.tree.expressions.BLangObjectCtorExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryAction;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRawTemplateLiteral;
@@ -341,11 +342,13 @@ public class TaintAnalyzer extends BLangNodeVisitor {
 
     @Override
     public void visit(BLangCompilationUnit compUnit) {
+
         compUnit.topLevelNodes.forEach(e -> ((BLangNode) e).accept(this));
     }
 
     @Override
     public void visit(BLangTypeDefinition typeDefinition) {
+
         if (typeDefinition.typeNode.getKind() == NodeKind.OBJECT_TYPE
                 || typeDefinition.typeNode.getKind() == NodeKind.RECORD_TYPE) {
             typeDefinition.typeNode.accept(this);
@@ -353,7 +356,14 @@ public class TaintAnalyzer extends BLangNodeVisitor {
     }
 
     @Override
+    public void visit(BLangObjectCtorExpr objectCtorExpr) {
+
+//        visit(objectCtorExpr.objectTypeNode);
+    }
+
+    @Override
     public void visit(BLangImportPackage importPkgNode) {
+
         BPackageSymbol pkgSymbol = importPkgNode.symbol;
         SymbolEnv pkgEnv = symTable.pkgEnvMap.get(pkgSymbol);
         if (pkgEnv == null) {

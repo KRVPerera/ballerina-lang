@@ -99,6 +99,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangMarkdownReturnParam
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangMatchExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangNamedArgsExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangNumericLiteral;
+import org.wso2.ballerinalang.compiler.tree.expressions.BLangObjectCtorExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryAction;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRawTemplateLiteral;
@@ -2013,6 +2014,24 @@ public class NodeCloner extends BLangNodeVisitor {
                 cloneList(source.filters),
                 source.navAccessType,
                 clone(source.childIndex));
+        source.cloneRef = clone;
+    }
+
+    @Override
+    public void visit(BLangObjectCtorExpr source) {
+        BLangObjectCtorExpr clone = new BLangObjectCtorExpr();
+        clone.pos = source.pos;
+
+        BLangObjectTypeNode objectTypeNodeClone = new BLangObjectTypeNode();
+        source.objectTypeNode.cloneRef = objectTypeNodeClone;
+        objectTypeNodeClone.functions = cloneList(source.objectTypeNode.functions);
+        objectTypeNodeClone.initFunction = clone(source.objectTypeNode.initFunction);
+        objectTypeNodeClone.receiver = clone(source.objectTypeNode.receiver);
+        objectTypeNodeClone.flagSet = cloneSet(source.objectTypeNode.flagSet, Flag.class);
+        cloneBLangStructureTypeNode(source.objectTypeNode, objectTypeNodeClone);
+        cloneBLangType(source.objectTypeNode, objectTypeNodeClone);
+
+        clone.objectTypeNode = objectTypeNodeClone;
         source.cloneRef = clone;
     }
 }

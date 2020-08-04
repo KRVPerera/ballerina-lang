@@ -847,6 +847,30 @@ public abstract class NodeFactory extends AbstractNodeFactory {
         return stObjectTypeDescriptorNode.createUnlinkedFacade();
     }
 
+    public static ObjectConstructorExpressionNode createObjectConstructorExpressionNode(
+            MetadataNode metadata,
+            Token objectTypeQualifier,
+            Token objectKeyword,
+            TypeDescriptorNode typeDescriptor,
+            Token openBracket,
+            NodeList<Node> members,
+            Token closeBracket) {
+        Objects.requireNonNull(objectKeyword, "objectKeyword must not be null");
+        Objects.requireNonNull(openBracket, "openBracket must not be null");
+        Objects.requireNonNull(members, "members must not be null");
+        Objects.requireNonNull(closeBracket, "closeBracket must not be null");
+
+        STNode stObjectConstructorExpressionNode = STNodeFactory.createObjectConstructorExpressionNode(
+                getOptionalSTNode(metadata),
+                getOptionalSTNode(objectTypeQualifier),
+                objectKeyword.internalNode(),
+                getOptionalSTNode(typeDescriptor),
+                openBracket.internalNode(),
+                members.underlyingListNode().internalNode(),
+                closeBracket.internalNode());
+        return stObjectConstructorExpressionNode.createUnlinkedFacade();
+    }
+
     public static RecordTypeDescriptorNode createRecordTypeDescriptorNode(
             Token recordKeyword,
             Token bodyStartDelimiter,

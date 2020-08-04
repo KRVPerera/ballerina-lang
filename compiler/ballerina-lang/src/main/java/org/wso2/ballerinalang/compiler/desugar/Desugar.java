@@ -31,6 +31,7 @@ import org.ballerinalang.model.tree.expressions.RecordLiteralNode;
 import org.ballerinalang.model.tree.expressions.XMLNavigationAccess;
 import org.ballerinalang.model.tree.statements.VariableDefinitionNode;
 import org.ballerinalang.model.tree.types.TypeNode;
+import org.ballerinalang.model.types.ObjectType;
 import org.ballerinalang.model.types.TypeKind;
 import org.ballerinalang.util.BLangCompilerConstants;
 import org.wso2.ballerinalang.compiler.parser.BLangAnonymousModelHelper;
@@ -139,6 +140,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangMatchExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangMatchExpression.BLangMatchExprPatternClause;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangNamedArgsExpression;
+import org.wso2.ballerinalang.compiler.tree.expressions.BLangObjectCtorExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryAction;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRawTemplateLiteral;
@@ -728,6 +730,59 @@ public class Desugar extends BLangNodeVisitor {
 
         typeDef.annAttachments.forEach(attachment ->  rewrite(attachment, env));
         result = typeDef;
+    }
+
+    @Override
+    public void visit(BLangObjectCtorExpr objectCtorExpr) {
+        BLangNode localResult = result;
+//        visit(objectCtorExpr.objectTypeNode);
+//        BLangTypeDefinition objClassDef = rewrite(objectCtorExpr.objectTypeNode, env);
+
+        DiagnosticPos pos = objectCtorExpr.pos;
+        BObjectType objType = (BObjectType) objectCtorExpr.objectTypeNode.type;
+        objectCtorExpr.desugarPhase = true;
+
+        BObjectTypeSymbol tSymbol = (BObjectTypeSymbol) objectCtorExpr.type.tsymbol;
+        Name objectClassName = names.fromString(
+                anonModelHelper.getNextRawTemplateTypeKey(env.enclPkg.packageID, tSymbol.name));
+        BObjectTypeSymbol classTSymbol = Symbols.createObjectSymbol(tSymbol.flags, objectClassName,
+                env.enclPkg.packageID, null, env.enclPkg.symbol);
+
+        // Create a new concrete, class type for the provided abstract object type
+        BObjectType objectClassType = new BObjectType(classTSymbol, tSymbol.flags);
+        objectClassType.fields = objType.fields;
+        classTSymbol.type = objectClassType;
+
+        // Create a new object type node and a type def from the concrete class type
+        BLangObjectTypeNode objectClassNode = objectCtorExpr.objectTypeNode;
+        BLangTypeDefinition typeDef = TypeDefBuilderHelper.addTypeDefinition(objectClassType, objectClassType.tsymbol,
+                objectClassNode, env);
+        typeDef.name = ASTBuilderUtil.createIdentifier(pos, objectClassType.tsymbol.name.value);
+        typeDef.pos = pos;
+
+        BLangFunction userDefinedInitFunction = createUserDefinedObjectInitFn(objectClassNode, env);
+        objectClassNode.initFunction = userDefinedInitFunction;
+        env.enclPkg.functions.add(userDefinedInitFunction);
+        env.enclPkg.topLevelNodes.add(userDefinedInitFunction);
+
+        // Create the initializer method for initializing default values
+        BLangFunction tempGeneratedInitFunction = createGeneratedInitializerFunction(objectClassNode, env);
+        tempGeneratedInitFunction.clonedEnv = SymbolEnv.createFunctionEnv(tempGeneratedInitFunction,
+                tempGeneratedInitFunction.symbol.scope, env);
+        this.semanticAnalyzer.analyzeNode(tempGeneratedInitFunction, env);
+        objectClassNode.generatedInitFunction = tempGeneratedInitFunction;
+        env.enclPkg.functions.add(objectClassNode.generatedInitFunction);
+        env.enclPkg.topLevelNodes.add(objectClassNode.generatedInitFunction);
+
+        BLangTypeDefinition typeDefinition = rewrite(typeDef, env);
+        BObjectType classObjType = (BObjectType) typeDefinition.type;
+
+        BLangTypeInit typeNewExpr = ASTBuilderUtil.createEmptyTypeInit(pos, classObjType);
+//        typeNewExpr.argsExpr.add(insertionsList);
+//        typeNewExpr.initInvocation.argExprs.add(insertionsList);
+//        typeNewExpr.initInvocation.requiredArgs.add(insertionsList);
+
+        result = rewriteExpr(typeNewExpr);
     }
 
     @Override
