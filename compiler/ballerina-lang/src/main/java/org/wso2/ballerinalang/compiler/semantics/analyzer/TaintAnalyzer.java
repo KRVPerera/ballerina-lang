@@ -359,6 +359,7 @@ public class TaintAnalyzer extends BLangNodeVisitor {
     public void visit(BLangObjectCtorExpr objectCtorExpr) {
 
 //        visit(objectCtorExpr.objectTypeNode);
+//        objectCtorExpr.objectTypeNode.accept(this);
     }
 
     @Override
@@ -1008,7 +1009,7 @@ public class TaintAnalyzer extends BLangNodeVisitor {
         if (varRefExpr.symbol == null) {
             Name varName = names.fromIdNode(varRefExpr.variableName);
             if (varName != Names.IGNORE) {
-                if (varRefExpr.pkgSymbol.tag == SymTag.XMLNS) {
+                if (varRefExpr.pkgSymbol != null && varRefExpr.pkgSymbol.tag == SymTag.XMLNS) {
                     getCurrentAnalysisState().taintedStatus = varRefExpr.pkgSymbol.tainted ?
                             TaintedStatus.TAINTED : TaintedStatus.UNTAINTED;
                     return;

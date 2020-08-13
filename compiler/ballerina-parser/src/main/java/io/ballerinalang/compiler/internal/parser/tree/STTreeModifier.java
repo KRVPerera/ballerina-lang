@@ -680,21 +680,29 @@ public abstract class STTreeModifier extends STNodeTransformer<STNode> {
     @Override
     public STObjectConstructorExpressionNode transform(
             STObjectConstructorExpressionNode objectConstructorExpressionNode) {
-        STNode metadata = modifyNode(objectConstructorExpressionNode.metadata);
+        STNode annotations = modifyNode(objectConstructorExpressionNode.annotations);
         STNode objectTypeQualifier = modifyNode(objectConstructorExpressionNode.objectTypeQualifier);
         STNode objectKeyword = modifyNode(objectConstructorExpressionNode.objectKeyword);
         STNode typeDescriptor = modifyNode(objectConstructorExpressionNode.typeDescriptor);
-        STNode openBracket = modifyNode(objectConstructorExpressionNode.openBracket);
-        STNode members = modifyNode(objectConstructorExpressionNode.members);
-        STNode closeBracket = modifyNode(objectConstructorExpressionNode.closeBracket);
+        STNode objectConstructorBody = modifyNode(objectConstructorExpressionNode.objectConstructorBody);
         return objectConstructorExpressionNode.modify(
-                metadata,
+                annotations,
                 objectTypeQualifier,
                 objectKeyword,
                 typeDescriptor,
-                openBracket,
+                objectConstructorBody);
+    }
+
+    @Override
+    public STObjectConstructorBodyNode transform(
+            STObjectConstructorBodyNode objectConstructorBodyNode) {
+        STNode openBraceToken = modifyNode(objectConstructorBodyNode.openBraceToken);
+        STNode members = modifyNode(objectConstructorBodyNode.members);
+        STNode closeBraceToken = modifyNode(objectConstructorBodyNode.closeBraceToken);
+        return objectConstructorBodyNode.modify(
+                openBraceToken,
                 members,
-                closeBracket);
+                closeBraceToken);
     }
 
     @Override

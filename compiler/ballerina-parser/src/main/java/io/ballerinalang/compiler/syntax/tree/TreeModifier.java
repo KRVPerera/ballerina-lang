@@ -862,28 +862,37 @@ public abstract class TreeModifier extends NodeTransformer<Node> {
     @Override
     public ObjectConstructorExpressionNode transform(
             ObjectConstructorExpressionNode objectConstructorExpressionNode) {
-        MetadataNode metadata =
-                modifyNode(objectConstructorExpressionNode.metadata().orElse(null));
+        NodeList<AnnotationNode> annotations =
+                modifyNodeList(objectConstructorExpressionNode.annotations());
         Token objectTypeQualifier =
                 modifyToken(objectConstructorExpressionNode.objectTypeQualifier().orElse(null));
         Token objectKeyword =
                 modifyToken(objectConstructorExpressionNode.objectKeyword());
         TypeDescriptorNode typeDescriptor =
                 modifyNode(objectConstructorExpressionNode.typeDescriptor().orElse(null));
-        Token openBracket =
-                modifyToken(objectConstructorExpressionNode.openBracket());
-        NodeList<Node> members =
-                modifyNodeList(objectConstructorExpressionNode.members());
-        Token closeBracket =
-                modifyToken(objectConstructorExpressionNode.closeBracket());
+        ObjectConstructorBodyNode objectConstructorBody =
+                modifyNode(objectConstructorExpressionNode.objectConstructorBody());
         return objectConstructorExpressionNode.modify(
-                metadata,
+                annotations,
                 objectTypeQualifier,
                 objectKeyword,
                 typeDescriptor,
-                openBracket,
+                objectConstructorBody);
+    }
+
+    @Override
+    public ObjectConstructorBodyNode transform(
+            ObjectConstructorBodyNode objectConstructorBodyNode) {
+        Token openBraceToken =
+                modifyToken(objectConstructorBodyNode.openBraceToken());
+        NodeList<Node> members =
+                modifyNodeList(objectConstructorBodyNode.members());
+        Token closeBraceToken =
+                modifyToken(objectConstructorBodyNode.closeBraceToken());
+        return objectConstructorBodyNode.modify(
+                openBraceToken,
                 members,
-                closeBracket);
+                closeBraceToken);
     }
 
     @Override

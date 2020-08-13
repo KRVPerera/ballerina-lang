@@ -398,17 +398,6 @@ public class BallerinaParser extends AbstractParser {
                 return parsePanicKeyword();
             case VERSION_KEYWORD:
                 return parseVersionKeyword();
-            case VERSION_NUMBER:
-                return parseVersionNumber();
-            case DECIMAL_INTEGER_LITERAL:
-            case MAJOR_VERSION:
-            case MINOR_VERSION:
-            case PATCH_VERSION:
-                return parseDecimalIntLiteral(context);
-            case IMPORT_SUB_VERSION:
-                return parseSubVersion(context);
-            case IMPORT_PREFIX_DECL:
-                return parseImportPrefixDecl();
             case AS_KEYWORD:
                 return parseAsKeyword();
             case CONTINUE_KEYWORD:
@@ -1245,15 +1234,12 @@ public class BallerinaParser extends AbstractParser {
         STNode minorVersionEnd = parseSubVersionEnd();
         if (minorVersionEnd != null) {
             versionParts.add(minorVersionEnd);
-        STNode minorVersion = parseMinorVersion();
             STNode minorVersion = parseMinorVersion();
             versionParts.add(minorVersion);
 
             STNode patchVersionEnd = parseSubVersionEnd();
             if (patchVersionEnd != null) {
                 versionParts.add(patchVersionEnd);
-            STNode patchVersion = parsePatchVersion();
-            STNode patchVersion = parsePatchVersion();
                 STNode patchVersion = parsePatchVersion();
                 versionParts.add(patchVersion);
             }
@@ -1616,10 +1602,6 @@ public class BallerinaParser extends AbstractParser {
 
         return STNodeFactory.createFunctionDefinitionNode(SyntaxKind.FUNCTION_DEFINITION, metadata, qualifierList,
                 functionKeyword, name, funcSignature, body);
-    }
-
-        return STNodeFactory.createFunctionDefinitionNode(metadata, qualifiers[0], qualifiers[1], functionKeyword, name,
-                funcSignature, body);
     }
 
     /**
@@ -1997,7 +1979,6 @@ public class BallerinaParser extends AbstractParser {
      * Parse a single parameter. Parameter can be a required parameter, a defaultable
      * parameter, or a rest parameter.
      *
-     * @param prevParamKind       Kind of the parameter that precedes current parameter
      * @param prevParamKind Kind of the parameter that precedes current parameter
      * @param isParamNameOptional Whether the param names in the signature is optional or not.
      * @return Parsed node
@@ -5431,6 +5412,8 @@ public class BallerinaParser extends AbstractParser {
             objectTypeQualifier = STNodeFactory.createEmptyNode();
         }
 
+        STNode objectKeyword = parseObjectKeyword();
+
         STNode typeDescriptor;
         nextToken = peek();
         if (nextToken.kind == SyntaxKind.IDENTIFIER_TOKEN) {
@@ -5439,13 +5422,23 @@ public class BallerinaParser extends AbstractParser {
             typeDescriptor = STNodeFactory.createEmptyNode();
         }
 
-        STNode objectKeyword = parseObjectKeyword();
-        STNode openBracket = parseOpenBrace();
-        STNode objectMembers = parseObjectMembers();
-        STNode closeBracket = parseCloseBrace();
+
+        STNode objectCtorBody = parseObjectConstructorBody();
         endContext();
-        return STNodeFactory.createObjectConstructorExpressionNode(metadata,
-                objectTypeQualifier, objectKeyword, typeDescriptor, openBracket, objectMembers, closeBracket);
+        return STNodeFactory.createObjectConstructorExpressionNode(annots,
+                objectTypeQualifier, objectKeyword, typeDescriptor, objectCtorBody);
+    }
+
+    private STNode parseObjectConstructorBody() {
+        startContext(ParserRuleContext.OBJECT_CONSTRUCTOR_BODY);
+
+        STNode openBrace = parseOpenBrace();
+        STNode objectMembers = parseObjectMembers();
+        STNode closeBrace = parseCloseBrace();
+
+        endContext();
+
+        return STNodeFactory.createObjectConstructorBodyNode(openBrace, objectMembers, closeBrace);
     }
 
     /**
@@ -7458,7 +7451,7 @@ public class BallerinaParser extends AbstractParser {
     /**
      * Parse annotations.
      * <p>
-     * <i>Note: In the ballerina spec ({@link https://ballerina.io/spec/lang/2020R1/#annots})
+     * <i>Note: In the ballerina spec ({@link http://ballerina.io/spec/lang/2020R1/#annots})
      * annotations-list is specified as one-or-more annotations. And the usage is marked as
      * optional annotations-list. However, for the consistency of the tree, here we make the
      * annotation-list as zero-or-more annotations, and the usage is not-optional.</i>

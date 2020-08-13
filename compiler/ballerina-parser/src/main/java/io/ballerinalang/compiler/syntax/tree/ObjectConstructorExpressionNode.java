@@ -33,8 +33,8 @@ public class ObjectConstructorExpressionNode extends ExpressionNode {
         super(internalNode, position, parent);
     }
 
-    public Optional<MetadataNode> metadata() {
-        return optionalChildInBucket(0);
+    public NodeList<AnnotationNode> annotations() {
+        return new NodeList<>(childInBucket(0));
     }
 
     public Optional<Token> objectTypeQualifier() {
@@ -49,16 +49,8 @@ public class ObjectConstructorExpressionNode extends ExpressionNode {
         return optionalChildInBucket(3);
     }
 
-    public Token openBracket() {
+    public ObjectConstructorBodyNode objectConstructorBody() {
         return childInBucket(4);
-    }
-
-    public NodeList<Node> members() {
-        return new NodeList<>(childInBucket(5));
-    }
-
-    public Token closeBracket() {
-        return childInBucket(6);
     }
 
     @Override
@@ -74,42 +66,34 @@ public class ObjectConstructorExpressionNode extends ExpressionNode {
     @Override
     protected String[] childNames() {
         return new String[]{
-                "metadata",
+                "annotations",
                 "objectTypeQualifier",
                 "objectKeyword",
                 "typeDescriptor",
-                "openBracket",
-                "members",
-                "closeBracket"};
+                "objectConstructorBody"};
     }
 
     public ObjectConstructorExpressionNode modify(
-            MetadataNode metadata,
+            NodeList<AnnotationNode> annotations,
             Token objectTypeQualifier,
             Token objectKeyword,
             TypeDescriptorNode typeDescriptor,
-            Token openBracket,
-            NodeList<Node> members,
-            Token closeBracket) {
+            ObjectConstructorBodyNode objectConstructorBody) {
         if (checkForReferenceEquality(
-                metadata,
+                annotations.underlyingListNode(),
                 objectTypeQualifier,
                 objectKeyword,
                 typeDescriptor,
-                openBracket,
-                members.underlyingListNode(),
-                closeBracket)) {
+                objectConstructorBody)) {
             return this;
         }
 
         return NodeFactory.createObjectConstructorExpressionNode(
-                metadata,
+                annotations,
                 objectTypeQualifier,
                 objectKeyword,
                 typeDescriptor,
-                openBracket,
-                members,
-                closeBracket);
+                objectConstructorBody);
     }
 
     public ObjectConstructorExpressionNodeModifier modify() {
@@ -123,29 +107,25 @@ public class ObjectConstructorExpressionNode extends ExpressionNode {
      */
     public static class ObjectConstructorExpressionNodeModifier {
         private final ObjectConstructorExpressionNode oldNode;
-        private MetadataNode metadata;
+        private NodeList<AnnotationNode> annotations;
         private Token objectTypeQualifier;
         private Token objectKeyword;
         private TypeDescriptorNode typeDescriptor;
-        private Token openBracket;
-        private NodeList<Node> members;
-        private Token closeBracket;
+        private ObjectConstructorBodyNode objectConstructorBody;
 
         public ObjectConstructorExpressionNodeModifier(ObjectConstructorExpressionNode oldNode) {
             this.oldNode = oldNode;
-            this.metadata = oldNode.metadata().orElse(null);
+            this.annotations = oldNode.annotations();
             this.objectTypeQualifier = oldNode.objectTypeQualifier().orElse(null);
             this.objectKeyword = oldNode.objectKeyword();
             this.typeDescriptor = oldNode.typeDescriptor().orElse(null);
-            this.openBracket = oldNode.openBracket();
-            this.members = oldNode.members();
-            this.closeBracket = oldNode.closeBracket();
+            this.objectConstructorBody = oldNode.objectConstructorBody();
         }
 
-        public ObjectConstructorExpressionNodeModifier withMetadata(
-                MetadataNode metadata) {
-            Objects.requireNonNull(metadata, "metadata must not be null");
-            this.metadata = metadata;
+        public ObjectConstructorExpressionNodeModifier withAnnotations(
+                NodeList<AnnotationNode> annotations) {
+            Objects.requireNonNull(annotations, "annotations must not be null");
+            this.annotations = annotations;
             return this;
         }
 
@@ -170,36 +150,20 @@ public class ObjectConstructorExpressionNode extends ExpressionNode {
             return this;
         }
 
-        public ObjectConstructorExpressionNodeModifier withOpenBracket(
-                Token openBracket) {
-            Objects.requireNonNull(openBracket, "openBracket must not be null");
-            this.openBracket = openBracket;
-            return this;
-        }
-
-        public ObjectConstructorExpressionNodeModifier withMembers(
-                NodeList<Node> members) {
-            Objects.requireNonNull(members, "members must not be null");
-            this.members = members;
-            return this;
-        }
-
-        public ObjectConstructorExpressionNodeModifier withCloseBracket(
-                Token closeBracket) {
-            Objects.requireNonNull(closeBracket, "closeBracket must not be null");
-            this.closeBracket = closeBracket;
+        public ObjectConstructorExpressionNodeModifier withObjectConstructorBody(
+                ObjectConstructorBodyNode objectConstructorBody) {
+            Objects.requireNonNull(objectConstructorBody, "objectConstructorBody must not be null");
+            this.objectConstructorBody = objectConstructorBody;
             return this;
         }
 
         public ObjectConstructorExpressionNode apply() {
             return oldNode.modify(
-                    metadata,
+                    annotations,
                     objectTypeQualifier,
                     objectKeyword,
                     typeDescriptor,
-                    openBracket,
-                    members,
-                    closeBracket);
+                    objectConstructorBody);
         }
     }
 }

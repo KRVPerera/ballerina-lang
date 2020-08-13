@@ -848,27 +848,37 @@ public abstract class NodeFactory extends AbstractNodeFactory {
     }
 
     public static ObjectConstructorExpressionNode createObjectConstructorExpressionNode(
-            MetadataNode metadata,
+            NodeList<AnnotationNode> annotations,
             Token objectTypeQualifier,
             Token objectKeyword,
             TypeDescriptorNode typeDescriptor,
-            Token openBracket,
-            NodeList<Node> members,
-            Token closeBracket) {
+            ObjectConstructorBodyNode objectConstructorBody) {
+        Objects.requireNonNull(annotations, "annotations must not be null");
         Objects.requireNonNull(objectKeyword, "objectKeyword must not be null");
-        Objects.requireNonNull(openBracket, "openBracket must not be null");
-        Objects.requireNonNull(members, "members must not be null");
-        Objects.requireNonNull(closeBracket, "closeBracket must not be null");
+        Objects.requireNonNull(objectConstructorBody, "objectConstructorBody must not be null");
 
         STNode stObjectConstructorExpressionNode = STNodeFactory.createObjectConstructorExpressionNode(
-                getOptionalSTNode(metadata),
+                annotations.underlyingListNode().internalNode(),
                 getOptionalSTNode(objectTypeQualifier),
                 objectKeyword.internalNode(),
                 getOptionalSTNode(typeDescriptor),
-                openBracket.internalNode(),
-                members.underlyingListNode().internalNode(),
-                closeBracket.internalNode());
+                objectConstructorBody.internalNode());
         return stObjectConstructorExpressionNode.createUnlinkedFacade();
+    }
+
+    public static ObjectConstructorBodyNode createObjectConstructorBodyNode(
+            Token openBraceToken,
+            NodeList<Node> members,
+            Token closeBraceToken) {
+        Objects.requireNonNull(openBraceToken, "openBraceToken must not be null");
+        Objects.requireNonNull(members, "members must not be null");
+        Objects.requireNonNull(closeBraceToken, "closeBraceToken must not be null");
+
+        STNode stObjectConstructorBodyNode = STNodeFactory.createObjectConstructorBodyNode(
+                openBraceToken.internalNode(),
+                members.underlyingListNode().internalNode(),
+                closeBraceToken.internalNode());
+        return stObjectConstructorBodyNode.createUnlinkedFacade();
     }
 
     public static RecordTypeDescriptorNode createRecordTypeDescriptorNode(

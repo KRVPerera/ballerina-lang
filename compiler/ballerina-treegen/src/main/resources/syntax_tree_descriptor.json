@@ -1131,9 +1131,9 @@
             "kind": "OBJECT_CONSTRUCTOR",
             "attributes": [
                 {
-                    "name": "metadata",
-                    "type": "MetadataNode",
-                    "isOptional": true
+                    "name": "annotations",
+                    "type": "AnnotationNode",
+                    "occurrences": "MULTIPLE"
                 },
                 {
                     "name": "objectTypeQualifier",
@@ -1150,7 +1150,18 @@
                     "isOptional": true
                 },
                 {
-                    "name": "openBracket",
+                    "name": "objectConstructorBody",
+                    "type": "ObjectConstructorBodyNode"
+                }
+            ]
+        },
+        {
+            "name": "ObjectConstructorBodyNode",
+            "base": "Node",
+            "kind": "OBJECT_CONSTRUCTOR_BODY",
+            "attributes": [
+                {
+                    "name": "openBraceToken",
                     "type": "Token"
                 },
                 {
@@ -1159,7 +1170,7 @@
                     "occurrences": "MULTIPLE"
                 },
                 {
-                    "name": "closeBracket",
+                    "name": "closeBraceToken",
                     "type": "Token"
                 }
             ]

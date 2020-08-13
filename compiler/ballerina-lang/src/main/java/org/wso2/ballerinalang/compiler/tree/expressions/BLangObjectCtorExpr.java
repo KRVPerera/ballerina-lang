@@ -28,6 +28,7 @@ import org.wso2.ballerinalang.compiler.tree.BLangFunction;
 import org.wso2.ballerinalang.compiler.tree.BLangMarkdownDocumentation;
 import org.wso2.ballerinalang.compiler.tree.BLangNodeVisitor;
 import org.wso2.ballerinalang.compiler.tree.BLangSimpleVariable;
+import org.wso2.ballerinalang.compiler.tree.BLangTypeDefinition;
 import org.wso2.ballerinalang.compiler.tree.types.BLangObjectTypeNode;
 import org.wso2.ballerinalang.compiler.tree.types.BLangType;
 
@@ -36,12 +37,12 @@ import java.util.List;
 
 public class BLangObjectCtorExpr extends BLangExpression implements StructureTypeNode {
 
-    public BLangExpression expr;
     public BLangObjectTypeNode objectTypeNode;
     public BLangFunction initFunction;
-    public List<BLangAnnotationAttachment> annAttachments;
+    public BLangTypeInit typeInit;
     public BLangType referenceType;
     public boolean desugarPhase;
+//    public BLangTypeDefinition typeDefinition;
 
     @Override
     public void accept(BLangNodeVisitor visitor) {
@@ -66,11 +67,11 @@ public class BLangObjectCtorExpr extends BLangExpression implements StructureTyp
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("OCE");
+        StringBuilder sb = new StringBuilder("OCE {\n");
         sb.append(this.objectTypeNode.toString());
-        sb.append(", ");
-        sb.append("Desugared :  ");
+        sb.append("\nDesugared :  ");
         sb.append(this.desugarPhase);
+        sb.append("};\n");
         return sb.toString();
     }
 

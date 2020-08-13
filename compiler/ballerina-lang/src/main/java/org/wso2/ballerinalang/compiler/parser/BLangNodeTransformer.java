@@ -116,6 +116,7 @@ import io.ballerinalang.compiler.syntax.tree.Node;
 import io.ballerinalang.compiler.syntax.tree.NodeList;
 import io.ballerinalang.compiler.syntax.tree.NodeTransformer;
 import io.ballerinalang.compiler.syntax.tree.NonTerminalNode;
+import io.ballerinalang.compiler.syntax.tree.ObjectConstructorBodyNode;
 import io.ballerinalang.compiler.syntax.tree.ObjectConstructorExpressionNode;
 import io.ballerinalang.compiler.syntax.tree.ObjectFieldNode;
 import io.ballerinalang.compiler.syntax.tree.ObjectTypeDescriptorNode;
@@ -233,6 +234,10 @@ import org.ballerinalang.model.tree.statements.VariableDefinitionNode;
 import org.ballerinalang.model.types.TypeKind;
 import org.ballerinalang.util.diagnostic.DiagnosticCode;
 import org.wso2.ballerinalang.compiler.semantics.model.SymbolTable;
+import org.wso2.ballerinalang.compiler.semantics.model.symbols.BObjectTypeSymbol;
+import org.wso2.ballerinalang.compiler.semantics.model.symbols.BTypeSymbol;
+import org.wso2.ballerinalang.compiler.semantics.model.symbols.Symbols;
+import org.wso2.ballerinalang.compiler.semantics.model.types.BObjectType;
 import org.wso2.ballerinalang.compiler.tree.BLangAnnotation;
 import org.wso2.ballerinalang.compiler.tree.BLangAnnotationAttachment;
 import org.wso2.ballerinalang.compiler.tree.BLangBlockFunctionBody;
@@ -391,9 +396,11 @@ import org.wso2.ballerinalang.compiler.util.TypeTags;
 import org.wso2.ballerinalang.compiler.util.diagnotic.BDiagnosticSource;
 import org.wso2.ballerinalang.compiler.util.diagnotic.BLangDiagnosticLogHelper;
 import org.wso2.ballerinalang.compiler.util.diagnotic.DiagnosticPos;
+import org.wso2.ballerinalang.util.Flags;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -901,41 +908,11 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
     }
 
     @Override
-    public BLangNode transform(ObjectConstructorExpressionNode objectConstructorExpressionNode) {
-
-        BLangObjectCtorExpr objectCtorExpression = TreeBuilder.createObjectCtorExpression();
-        objectCtorExpression.pos = getPosition(objectConstructorExpressionNode);
-
-        Optional<MetadataNode> annots = objectConstructorExpressionNode.metadata();
-//        if (annots.isPresent()) {
-//            NodeList<AnnotationNode> annotations = getAnnotations(annots);
-//            if (annotations != null) {
-//                objectCtorExpression.annAttachments = applyAll(annotations);
-//            }
-//        }
-
-        Optional<TypeDescriptorNode> typeDescriptor = objectConstructorExpressionNode.typeDescriptor();
+    public BLangNode transform(ObjectConstructorBodyNode objectConstructorBodyNode) {
         BLangObjectTypeNode objectTypeNode = (BLangObjectTypeNode) TreeBuilder.createObjectTypeNode();
+        objectTypeNode.flagSet.add(Flag.ANONYMOUS);
 
-        objectTypeNode.pos = objectCtorExpression.pos;
-
-        Optional<Token> objectTypeQualifier = objectConstructorExpressionNode.objectTypeQualifier();
-        objectTypeQualifier.ifPresent(qualifier -> {
-            if (qualifier.kind() == SyntaxKind.CLIENT_KEYWORD) {
-                objectTypeNode.flagSet.add(Flag.CLIENT);
-            } else {
-                DiagnosticPos pos = getPosition(objectConstructorExpressionNode);
-                dlog.error(pos, DiagnosticCode.INVALID_TOKEN);
-            }
-        });
-
-        NodeList<Node> members = objectConstructorExpressionNode.members();
-
-        typeDescriptor.ifPresent(typeDescriptorNode -> {
-            objectCtorExpression.referenceType = createTypeNode(typeDescriptorNode);
-//            members.add(createTypeNode(typeDescriptorNode));
-            objectTypeNode.addTypeReference((BLangType) objectCtorExpression.referenceType);
-        });
+        NodeList<Node> members = objectConstructorBodyNode.members();
 
         for (Node node : members) {
             BLangNode bLangNode = node.apply(this);
@@ -961,10 +938,62 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
         }
 
         objectTypeNode.isAnonymous = true;
+        objectTypeNode.pos = getPosition(objectConstructorBodyNode);
+        return objectTypeNode;
+    }
+
+    @Override
+    public BLangNode transform(ObjectConstructorExpressionNode objectConstructorExpressionNode) {
+
+        BLangObjectCtorExpr objectCtorExpression = TreeBuilder.createObjectCtorExpression();
+        DiagnosticPos pos = getPositionWithoutMetadata(objectConstructorExpressionNode);
+        objectCtorExpression.pos = pos;
+
+        DiagnosticPos identifierPos = getPosition(objectConstructorExpressionNode.objectKeyword());
+        String objectTypeName =
+                this.anonymousModelHelper.getNextAnonObjectTypeKey(diagnosticSource.pkgID);
+        BLangIdentifier objectTypeNodeID = createIdentifier(identifierPos, objectTypeName);
+        objectTypeNodeID.pos = pos;
+
+        BLangObjectTypeNode objectTypeNode =
+                (BLangObjectTypeNode) createTypeNode(objectConstructorExpressionNode.objectConstructorBody());
+
+        Optional<TypeDescriptorNode> typeDescriptor = objectConstructorExpressionNode.typeDescriptor();
+
+        Optional<Token> objectTypeQualifier = objectConstructorExpressionNode.objectTypeQualifier();
+        objectTypeQualifier.ifPresent(qualifier -> {
+            if (qualifier.kind() == SyntaxKind.CLIENT_KEYWORD) {
+                objectTypeNode.flagSet.add(Flag.CLIENT);
+            } else {
+                dlog.error(pos, DiagnosticCode.INVALID_TOKEN);
+            }
+        });
+
+        typeDescriptor.ifPresent(typeDescriptorNode -> {
+            objectCtorExpression.referenceType = createTypeNode(typeDescriptorNode);
+            objectTypeNode.addTypeReference((BLangType) objectCtorExpression.referenceType);
+        });
+
+
+        BLangUserDefinedType userDefinedType = deSugarTypeAsUserDefType(objectTypeNode);
+
+        BLangTypeInit initNode = (BLangTypeInit) TreeBuilder.createInitNode();
+        initNode.pos = pos;
+        initNode.userDefinedType = userDefinedType;
+
+        BLangInvocation invocationNode = (BLangInvocation) TreeBuilder.createInvocationNode();
+        invocationNode.pos = pos;
+        BLangNameReference nameReference = new BLangNameReference(pos, null, objectTypeNodeID, objectTypeNodeID);
+
+        invocationNode.name = (BLangIdentifier) nameReference.name;
+        invocationNode.pkgAlias = (BLangIdentifier) nameReference.pkgAlias;
+
+        initNode.argsExpr.addAll(invocationNode.argExprs);
+        initNode.initInvocation = invocationNode;
 
         objectCtorExpression.objectTypeNode = objectTypeNode;
-
-        return objectCtorExpression;
+        objectCtorExpression.typeInit = initNode;
+        return initNode;
     }
 
     @Override

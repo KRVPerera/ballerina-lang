@@ -423,12 +423,12 @@ public class SymbolEnter extends BLangNodeVisitor {
     private boolean isNullOrEmpty(String s) {
         return s == null || s.isEmpty();
     }
-
-    @Override
-    public void visit(BLangObjectCtorExpr bLangObjectCtorExpr) {
-
-        super.visit(bLangObjectCtorExpr);
-    }
+//
+//    @Override
+//    public void visit(BLangObjectCtorExpr bLangObjectCtorExpr) {
+//
+//        super.visit(bLangObjectCtorExpr);
+//    }
 
     @Override
     public void visit(BLangImportPackage importPkgNode) {

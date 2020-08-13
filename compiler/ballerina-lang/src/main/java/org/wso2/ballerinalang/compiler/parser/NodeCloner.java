@@ -2022,16 +2022,12 @@ public class NodeCloner extends BLangNodeVisitor {
         BLangObjectCtorExpr clone = new BLangObjectCtorExpr();
         clone.pos = source.pos;
 
-        BLangObjectTypeNode objectTypeNodeClone = new BLangObjectTypeNode();
-        source.objectTypeNode.cloneRef = objectTypeNodeClone;
-        objectTypeNodeClone.functions = cloneList(source.objectTypeNode.functions);
-        objectTypeNodeClone.initFunction = clone(source.objectTypeNode.initFunction);
-        objectTypeNodeClone.receiver = clone(source.objectTypeNode.receiver);
-        objectTypeNodeClone.flagSet = cloneSet(source.objectTypeNode.flagSet, Flag.class);
-        cloneBLangStructureTypeNode(source.objectTypeNode, objectTypeNodeClone);
-        cloneBLangType(source.objectTypeNode, objectTypeNodeClone);
+        clone.objectTypeNode = clone(source.objectTypeNode);
+        clone.initFunction = clone(source.initFunction);
+        clone.referenceType = clone(source.referenceType);
+        clone.desugarPhase = source.desugarPhase;
+        clone.typeInit = clone(source.typeInit);
 
-        clone.objectTypeNode = objectTypeNodeClone;
         source.cloneRef = clone;
     }
 }

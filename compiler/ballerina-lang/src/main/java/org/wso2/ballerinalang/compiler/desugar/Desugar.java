@@ -255,6 +255,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -734,55 +735,43 @@ public class Desugar extends BLangNodeVisitor {
 
     @Override
     public void visit(BLangObjectCtorExpr objectCtorExpr) {
-        BLangNode localResult = result;
-//        visit(objectCtorExpr.objectTypeNode);
-//        BLangTypeDefinition objClassDef = rewrite(objectCtorExpr.objectTypeNode, env);
-
         DiagnosticPos pos = objectCtorExpr.pos;
-        BObjectType objType = (BObjectType) objectCtorExpr.objectTypeNode.type;
-        objectCtorExpr.desugarPhase = true;
 
-        BObjectTypeSymbol tSymbol = (BObjectTypeSymbol) objectCtorExpr.type.tsymbol;
-        Name objectClassName = names.fromString(
-                anonModelHelper.getNextRawTemplateTypeKey(env.enclPkg.packageID, tSymbol.name));
-        BObjectTypeSymbol classTSymbol = Symbols.createObjectSymbol(tSymbol.flags, objectClassName,
-                env.enclPkg.packageID, null, env.enclPkg.symbol);
+        EnumSet<Flag> flags = EnumSet.of(Flag.FINAL, Flag.ANONYMOUS);
+        BTypeSymbol objectSymbol = Symbols.createObjectSymbol(Flags.asMask(flags), Names.EMPTY,
+                env.enclPkg.symbol.pkgID, null, env.scope.owner);
 
-        // Create a new concrete, class type for the provided abstract object type
-        BObjectType objectClassType = new BObjectType(classTSymbol, tSymbol.flags);
-        objectClassType.fields = objType.fields;
-        classTSymbol.type = objectClassType;
+//        BObjectType objectType = new BObjectType(objectSymbol);
+//        objectSymbol.type = objectType;
+//
+//        BLangObjectTypeNode objectClassNode = TypeDefBuilderHelper.createObjectTypeNode(objectType, pos);
+//
+//        BLangFunction userDefinedInitFunction = createUserDefinedObjectInitFn(objectClassNode, env);
+//        objectClassNode.initFunction = userDefinedInitFunction;
+//        env.enclPkg.functions.add(userDefinedInitFunction);
+//        env.enclPkg.topLevelNodes.add(userDefinedInitFunction);
+////        objectType.
+//
+//        BLangTypeDefinition typeDef = TypeDefBuilderHelper.addTypeDefinition(objectType,  objectType.tsymbol,
+//                objectClassNode, env);
+//        typeDef.name = ASTBuilderUtil.createIdentifier(pos, objectType.tsymbol.name.value);
+//        typeDef.pos = pos;
+//
+//
+//
+//        BLangFunction tempGeneratedInitFunction = createGeneratedInitializerFunction(objectClassNode, env);
+//        tempGeneratedInitFunction.clonedEnv = SymbolEnv.createFunctionEnv(tempGeneratedInitFunction,
+//                tempGeneratedInitFunction.symbol.scope, env);
+//        this.semanticAnalyzer.analyzeNode(tempGeneratedInitFunction, env);
+//        objectClassNode.generatedInitFunction = tempGeneratedInitFunction;
+//        env.enclPkg.functions.add(objectClassNode.generatedInitFunction);
+//        env.enclPkg.topLevelNodes.add(objectClassNode.generatedInitFunction);
 
-        // Create a new object type node and a type def from the concrete class type
-        BLangObjectTypeNode objectClassNode = objectCtorExpr.objectTypeNode;
-        BLangTypeDefinition typeDef = TypeDefBuilderHelper.addTypeDefinition(objectClassType, objectClassType.tsymbol,
-                objectClassNode, env);
-        typeDef.name = ASTBuilderUtil.createIdentifier(pos, objectClassType.tsymbol.name.value);
-        typeDef.pos = pos;
+//        BLangTypeDefinition objClassDef  =  rewrite(objectCtorExpr.typeDefinition, env);
+//
+//        BLangTypeInit typeNewExpr = ASTBuilderUtil.createEmptyTypeInit(pos, (BObjectType) objClassDef.type);
 
-        BLangFunction userDefinedInitFunction = createUserDefinedObjectInitFn(objectClassNode, env);
-        objectClassNode.initFunction = userDefinedInitFunction;
-        env.enclPkg.functions.add(userDefinedInitFunction);
-        env.enclPkg.topLevelNodes.add(userDefinedInitFunction);
-
-        // Create the initializer method for initializing default values
-        BLangFunction tempGeneratedInitFunction = createGeneratedInitializerFunction(objectClassNode, env);
-        tempGeneratedInitFunction.clonedEnv = SymbolEnv.createFunctionEnv(tempGeneratedInitFunction,
-                tempGeneratedInitFunction.symbol.scope, env);
-        this.semanticAnalyzer.analyzeNode(tempGeneratedInitFunction, env);
-        objectClassNode.generatedInitFunction = tempGeneratedInitFunction;
-        env.enclPkg.functions.add(objectClassNode.generatedInitFunction);
-        env.enclPkg.topLevelNodes.add(objectClassNode.generatedInitFunction);
-
-        BLangTypeDefinition typeDefinition = rewrite(typeDef, env);
-        BObjectType classObjType = (BObjectType) typeDefinition.type;
-
-        BLangTypeInit typeNewExpr = ASTBuilderUtil.createEmptyTypeInit(pos, classObjType);
-//        typeNewExpr.argsExpr.add(insertionsList);
-//        typeNewExpr.initInvocation.argExprs.add(insertionsList);
-//        typeNewExpr.initInvocation.requiredArgs.add(insertionsList);
-
-        result = rewriteExpr(typeNewExpr);
+        result = rewriteExpr(objectCtorExpr.typeInit);
     }
 
     @Override
