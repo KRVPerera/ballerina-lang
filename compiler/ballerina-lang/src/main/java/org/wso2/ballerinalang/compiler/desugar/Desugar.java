@@ -735,42 +735,6 @@ public class Desugar extends BLangNodeVisitor {
 
     @Override
     public void visit(BLangObjectCtorExpr objectCtorExpr) {
-        DiagnosticPos pos = objectCtorExpr.pos;
-
-        EnumSet<Flag> flags = EnumSet.of(Flag.FINAL, Flag.ANONYMOUS);
-        BTypeSymbol objectSymbol = Symbols.createObjectSymbol(Flags.asMask(flags), Names.EMPTY,
-                env.enclPkg.symbol.pkgID, null, env.scope.owner);
-
-//        BObjectType objectType = new BObjectType(objectSymbol);
-//        objectSymbol.type = objectType;
-//
-//        BLangObjectTypeNode objectClassNode = TypeDefBuilderHelper.createObjectTypeNode(objectType, pos);
-//
-//        BLangFunction userDefinedInitFunction = createUserDefinedObjectInitFn(objectClassNode, env);
-//        objectClassNode.initFunction = userDefinedInitFunction;
-//        env.enclPkg.functions.add(userDefinedInitFunction);
-//        env.enclPkg.topLevelNodes.add(userDefinedInitFunction);
-////        objectType.
-//
-//        BLangTypeDefinition typeDef = TypeDefBuilderHelper.addTypeDefinition(objectType,  objectType.tsymbol,
-//                objectClassNode, env);
-//        typeDef.name = ASTBuilderUtil.createIdentifier(pos, objectType.tsymbol.name.value);
-//        typeDef.pos = pos;
-//
-//
-//
-//        BLangFunction tempGeneratedInitFunction = createGeneratedInitializerFunction(objectClassNode, env);
-//        tempGeneratedInitFunction.clonedEnv = SymbolEnv.createFunctionEnv(tempGeneratedInitFunction,
-//                tempGeneratedInitFunction.symbol.scope, env);
-//        this.semanticAnalyzer.analyzeNode(tempGeneratedInitFunction, env);
-//        objectClassNode.generatedInitFunction = tempGeneratedInitFunction;
-//        env.enclPkg.functions.add(objectClassNode.generatedInitFunction);
-//        env.enclPkg.topLevelNodes.add(objectClassNode.generatedInitFunction);
-
-//        BLangTypeDefinition objClassDef  =  rewrite(objectCtorExpr.typeDefinition, env);
-//
-//        BLangTypeInit typeNewExpr = ASTBuilderUtil.createEmptyTypeInit(pos, (BObjectType) objClassDef.type);
-
         result = rewriteExpr(objectCtorExpr.typeInit);
     }
 
