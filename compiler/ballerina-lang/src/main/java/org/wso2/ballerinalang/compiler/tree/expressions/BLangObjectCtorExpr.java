@@ -32,6 +32,11 @@ import org.wso2.ballerinalang.compiler.tree.types.BLangType;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents the object-constructor-expr
+ *
+ * @since slp3
+ */
 public class BLangObjectCtorExpr extends BLangExpression implements StructureTypeNode {
 
     public BLangObjectTypeNode objectTypeNode;
