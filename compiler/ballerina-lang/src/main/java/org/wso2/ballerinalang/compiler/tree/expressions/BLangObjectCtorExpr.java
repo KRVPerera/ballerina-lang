@@ -23,12 +23,9 @@ import org.ballerinalang.model.tree.NodeKind;
 import org.ballerinalang.model.tree.SimpleVariableNode;
 import org.ballerinalang.model.tree.types.StructureTypeNode;
 import org.ballerinalang.model.tree.types.TypeNode;
-import org.wso2.ballerinalang.compiler.tree.BLangAnnotationAttachment;
 import org.wso2.ballerinalang.compiler.tree.BLangFunction;
-import org.wso2.ballerinalang.compiler.tree.BLangMarkdownDocumentation;
 import org.wso2.ballerinalang.compiler.tree.BLangNodeVisitor;
 import org.wso2.ballerinalang.compiler.tree.BLangSimpleVariable;
-import org.wso2.ballerinalang.compiler.tree.BLangTypeDefinition;
 import org.wso2.ballerinalang.compiler.tree.types.BLangObjectTypeNode;
 import org.wso2.ballerinalang.compiler.tree.types.BLangType;
 
@@ -42,17 +39,22 @@ public class BLangObjectCtorExpr extends BLangExpression implements StructureTyp
     public BLangTypeInit typeInit;
     public BLangType referenceType;
     public boolean desugarPhase;
+
+    public BLangObjectCtorExpr(BLangObjectTypeNode objectTypeNode) {
+        super();
+        this.objectTypeNode = objectTypeNode;
+        desugarPhase = false;
+    }
 //    public BLangTypeDefinition typeDefinition;
 
     @Override
     public void accept(BLangNodeVisitor visitor) {
-
         visitor.visit(this);
     }
 
-    public BLangObjectCtorExpr() {
-        desugarPhase = false;
-    }
+//    public BLangObjectCtorExpr() {
+//        desugarPhase = false;
+//    }
 
     /**
      * Returns the kind of this node.
@@ -116,6 +118,7 @@ public class BLangObjectCtorExpr extends BLangExpression implements StructureTyp
     public void addTypeReference(TypeNode type) {
         if (this.referenceType == null) {
             this.referenceType = (BLangType) type;
+            this.objectTypeNode.addTypeReference(type);
         }
         throw new BallerinaException("object-constructor-expr can only have one type-reference");
     }

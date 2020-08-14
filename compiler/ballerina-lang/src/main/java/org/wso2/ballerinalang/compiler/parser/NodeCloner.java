@@ -2019,10 +2019,10 @@ public class NodeCloner extends BLangNodeVisitor {
 
     @Override
     public void visit(BLangObjectCtorExpr source) {
-        BLangObjectCtorExpr clone = new BLangObjectCtorExpr();
+        BLangObjectTypeNode objectTypeNode = clone(source.objectTypeNode);
+        BLangObjectCtorExpr clone = new BLangObjectCtorExpr(objectTypeNode);
         clone.pos = source.pos;
 
-        clone.objectTypeNode = clone(source.objectTypeNode);
         clone.initFunction = clone(source.initFunction);
         clone.referenceType = clone(source.referenceType);
         clone.desugarPhase = source.desugarPhase;

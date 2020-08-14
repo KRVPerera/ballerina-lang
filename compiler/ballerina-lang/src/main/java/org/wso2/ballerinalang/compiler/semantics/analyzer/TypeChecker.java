@@ -4609,10 +4609,8 @@ public class TypeChecker extends BLangNodeVisitor {
     @Override
     public void visit(BLangObjectCtorExpr objectCtorExpr) {
         BType definedType = symResolver.resolveTypeNode(objectCtorExpr.objectTypeNode, env);
-//        if (!objectCtorExpr.desugarPhase) return;
 
         if (expType == symTable.noType) {
-//            resultType = symTable.semanticError;
             resultType = definedType;
             return;
         }
@@ -4626,8 +4624,6 @@ public class TypeChecker extends BLangNodeVisitor {
             }
         }
 
-//        BType type = checkExpr(objectCtorExpr, this.env, expType);
-
         // TODO : check with lhs and rhs
         if (expType.tag != TypeTags.OBJECT) {
             dlog.error(objectCtorExpr.pos, DiagnosticCode.INVALID_TYPE_NEW_LITERAL, expType);
@@ -4635,19 +4631,7 @@ public class TypeChecker extends BLangNodeVisitor {
             return;
         }
 
-//        BType type = getObjectConstructorType(objectCtorExpr, this.env, expType);
-//        resultType = objectCtorExpr.typeDefinition.symbol.type;
         resultType = definedType;
-    }
-
-    private BType getObjectConstructorType(BLangObjectCtorExpr objectCtorExpr, SymbolEnv env, BType expType) {
-        if (expType == symTable.noType) {
-            //TODO: extract a generic object type
-            return objectCtorExpr.objectTypeNode.type;
-        }
-        BType type = types.checkType(objectCtorExpr.pos, objectCtorExpr.objectTypeNode.type, expType, DiagnosticCode.INCOMPATIBLE_TYPES);
-
-        return type;
     }
 
     private BType getEffectiveReadOnlyType(DiagnosticPos pos, BType origTargetType) {

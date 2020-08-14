@@ -234,10 +234,6 @@ import org.ballerinalang.model.tree.statements.VariableDefinitionNode;
 import org.ballerinalang.model.types.TypeKind;
 import org.ballerinalang.util.diagnostic.DiagnosticCode;
 import org.wso2.ballerinalang.compiler.semantics.model.SymbolTable;
-import org.wso2.ballerinalang.compiler.semantics.model.symbols.BObjectTypeSymbol;
-import org.wso2.ballerinalang.compiler.semantics.model.symbols.BTypeSymbol;
-import org.wso2.ballerinalang.compiler.semantics.model.symbols.Symbols;
-import org.wso2.ballerinalang.compiler.semantics.model.types.BObjectType;
 import org.wso2.ballerinalang.compiler.tree.BLangAnnotation;
 import org.wso2.ballerinalang.compiler.tree.BLangAnnotationAttachment;
 import org.wso2.ballerinalang.compiler.tree.BLangBlockFunctionBody;
@@ -400,7 +396,6 @@ import org.wso2.ballerinalang.util.Flags;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -945,9 +940,9 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
     @Override
     public BLangNode transform(ObjectConstructorExpressionNode objectConstructorExpressionNode) {
 
-        BLangObjectCtorExpr objectCtorExpression = TreeBuilder.createObjectCtorExpression();
+
         DiagnosticPos pos = getPositionWithoutMetadata(objectConstructorExpressionNode);
-        objectCtorExpression.pos = pos;
+
 
         DiagnosticPos identifierPos = getPosition(objectConstructorExpressionNode.objectKeyword());
         String objectTypeName =
@@ -955,9 +950,12 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
         BLangIdentifier objectTypeNodeID = createIdentifier(identifierPos, objectTypeName);
         objectTypeNodeID.pos = pos;
 
+
         BLangObjectTypeNode objectTypeNode =
                 (BLangObjectTypeNode) createTypeNode(objectConstructorExpressionNode.objectConstructorBody());
 
+        BLangObjectCtorExpr objectCtorExpression = TreeBuilder.createObjectCtorExpression(objectTypeNode);
+        objectCtorExpression.pos = pos;
         Optional<TypeDescriptorNode> typeDescriptor = objectConstructorExpressionNode.typeDescriptor();
 
         Optional<Token> objectTypeQualifier = objectConstructorExpressionNode.objectTypeQualifier();
@@ -971,7 +969,7 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
 
         typeDescriptor.ifPresent(typeDescriptorNode -> {
             BLangType type = createTypeNode(typeDescriptorNode);
-            objectCtorExpression.referenceType = type;
+            objectCtorExpression.addTypeReference(type);
             objectTypeNode.addTypeReference(type);
         });
 

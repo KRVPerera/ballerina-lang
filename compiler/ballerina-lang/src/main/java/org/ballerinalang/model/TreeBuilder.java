@@ -931,7 +931,7 @@ public class TreeBuilder {
         return new BLangIsLikeExpr();
     }
 
-    public static BLangObjectCtorExpr createObjectCtorExpression() {
-        return new BLangObjectCtorExpr();
+    public static BLangObjectCtorExpr createObjectCtorExpression(BLangObjectTypeNode objectTypeNode) {
+        return new BLangObjectCtorExpr(objectTypeNode);
     }
 }
