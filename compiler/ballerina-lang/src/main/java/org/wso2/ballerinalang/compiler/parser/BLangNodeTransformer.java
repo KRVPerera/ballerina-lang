@@ -970,8 +970,9 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
         });
 
         typeDescriptor.ifPresent(typeDescriptorNode -> {
-            objectCtorExpression.referenceType = createTypeNode(typeDescriptorNode);
-            objectTypeNode.addTypeReference((BLangType) objectCtorExpression.referenceType);
+            BLangType type = createTypeNode(typeDescriptorNode);
+            objectCtorExpression.referenceType = type;
+            objectTypeNode.addTypeReference(type);
         });
 
 
