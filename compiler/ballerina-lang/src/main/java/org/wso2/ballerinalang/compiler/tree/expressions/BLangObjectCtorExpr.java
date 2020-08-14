@@ -50,16 +50,11 @@ public class BLangObjectCtorExpr extends BLangExpression implements StructureTyp
         this.objectTypeNode = objectTypeNode;
         desugarPhase = false;
     }
-//    public BLangTypeDefinition typeDefinition;
 
     @Override
     public void accept(BLangNodeVisitor visitor) {
         visitor.visit(this);
     }
-
-//    public BLangObjectCtorExpr() {
-//        desugarPhase = false;
-//    }
 
     /**
      * Returns the kind of this node.
@@ -124,6 +119,7 @@ public class BLangObjectCtorExpr extends BLangExpression implements StructureTyp
         if (this.referenceType == null) {
             this.referenceType = (BLangType) type;
             this.objectTypeNode.addTypeReference(type);
+            return;
         }
         throw new BallerinaException("object-constructor-expr can only have one type-reference");
     }

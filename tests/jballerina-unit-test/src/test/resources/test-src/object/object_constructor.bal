@@ -38,7 +38,6 @@ var objCreatedViaConstructor = object MOO {
 function testObjectCreationViaObjectConstructor() {
     assertTrue(objCreatedViaConstructor.n == 20);
     assertTrue(objCreatedViaConstructor.x == 4);
-    assertTrue(false);
 }
 
 

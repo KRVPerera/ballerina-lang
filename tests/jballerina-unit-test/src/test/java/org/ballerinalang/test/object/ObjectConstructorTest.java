@@ -17,12 +17,9 @@
 */
 package org.ballerinalang.test.object;
 
-import org.ballerinalang.model.values.BValue;
-import org.ballerinalang.test.util.BAssertUtil;
 import org.ballerinalang.test.util.BCompileUtil;
 import org.ballerinalang.test.util.BRunUtil;
 import org.ballerinalang.test.util.CompileResult;
-import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -31,15 +28,15 @@ import org.testng.annotations.Test;
  */
 public class ObjectConstructorTest {
 
-    private CompileResult compiledConstrctedObjects;
+    private CompileResult compiledConstructedObjects;
 
     @BeforeClass
     public void setup() {
-        compiledConstrctedObjects = BCompileUtil.compile("test-src/object/object_constructor.bal");
+        compiledConstructedObjects = BCompileUtil.compile("test-src/object/object_constructor.bal");
     }
 
     @Test
     public void testObjectCreationViaObjectConstructor() {
-        BRunUtil.invoke(compiledConstrctedObjects, "testAbstractAnonObjectInTypeTest");
+        BRunUtil.invoke(compiledConstructedObjects, "testAbstractAnonObjectInTypeTest");
     }
 }
