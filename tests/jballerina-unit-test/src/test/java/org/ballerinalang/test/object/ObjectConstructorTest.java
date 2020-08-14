@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 /**
  * Test cases for abstract object types in ballerina.
  */
+@Test(groups = {"disableOnOldParser"})
 public class ObjectConstructorTest {
 
     private CompileResult compiledConstructedObjects;
@@ -37,6 +38,6 @@ public class ObjectConstructorTest {
 
     @Test
     public void testObjectCreationViaObjectConstructor() {
-        BRunUtil.invoke(compiledConstructedObjects, "testAbstractAnonObjectInTypeTest");
+        BRunUtil.invoke(compiledConstructedObjects, "testObjectCreationViaObjectConstructor");
     }
 }
