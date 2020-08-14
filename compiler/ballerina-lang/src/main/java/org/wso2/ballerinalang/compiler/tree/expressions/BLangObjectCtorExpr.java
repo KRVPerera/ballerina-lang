@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents the object-constructor-expr
+ * Represents the object-constructor-expr.
  *
  * @since slp3
  */
