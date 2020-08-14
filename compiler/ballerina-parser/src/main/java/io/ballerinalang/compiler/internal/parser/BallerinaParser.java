@@ -5393,19 +5393,8 @@ public class BallerinaParser extends AbstractParser {
 
         startContext(ParserRuleContext.OBJECT_CONSTRUCTOR);
 
-        STToken nextToken = peek();
-        STNode metadata;
-        switch (nextToken.kind) {
-            case DOCUMENTATION_STRING:
-            case AT_TOKEN:
-                metadata = parseMetaData(nextToken.kind);
-                break;
-            default:
-                metadata = STNodeFactory.createEmptyNode();
-        }
-
         STNode objectTypeQualifier;
-        nextToken = peek();
+        STToken nextToken = peek();
         if (nextToken.kind == SyntaxKind.CLIENT_KEYWORD) {
             objectTypeQualifier = parseClientKeyword();
         } else {
