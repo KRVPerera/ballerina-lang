@@ -5393,6 +5393,7 @@ public class BallerinaParser extends AbstractParser {
 
         startContext(ParserRuleContext.OBJECT_CONSTRUCTOR);
 
+        // only one type qualifier [CLIENT] is available
         STNode objectTypeQualifier;
         STToken nextToken = peek();
         if (nextToken.kind == SyntaxKind.CLIENT_KEYWORD) {
@@ -5411,9 +5412,10 @@ public class BallerinaParser extends AbstractParser {
             typeDescriptor = STNodeFactory.createEmptyNode();
         }
 
-
         STNode objectCtorBody = parseObjectConstructorBody();
+
         endContext();
+
         return STNodeFactory.createObjectConstructorExpressionNode(annots,
                 objectTypeQualifier, objectKeyword, typeDescriptor, objectCtorBody);
     }
