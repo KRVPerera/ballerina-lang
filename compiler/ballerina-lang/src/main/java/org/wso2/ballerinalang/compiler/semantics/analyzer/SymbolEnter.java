@@ -425,8 +425,7 @@ public class SymbolEnter extends BLangNodeVisitor {
         }
     }
 
-    private void populateDistinctTypeIdsFromIncludedTypeReferences(BLangClassDefinition typeDef) {
-        BLangClassDefinition classDefinition = typeDef;
+    private void populateDistinctTypeIdsFromIncludedTypeReferences(BLangClassDefinition classDefinition) {
         if (!classDefinition.flagSet.contains(Flag.DISTINCT)) {
             return;
         }
