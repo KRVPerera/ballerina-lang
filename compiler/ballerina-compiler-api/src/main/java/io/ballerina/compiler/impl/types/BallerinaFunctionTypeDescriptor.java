@@ -25,7 +25,6 @@ import io.ballerina.compiler.api.types.TypeDescKind;
 import io.ballerina.compiler.impl.TypesFactory;
 import io.ballerina.compiler.impl.symbols.SymbolFactory;
 import org.wso2.ballerinalang.compiler.semantics.model.symbols.BInvokableTypeSymbol;
-import org.wso2.ballerinalang.compiler.semantics.model.types.BInvokableType;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,6 +32,9 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import static io.ballerina.compiler.api.types.ParameterKind.DEFAULTABLE;
+import static io.ballerina.compiler.api.types.ParameterKind.REQUIRED;
+import static io.ballerina.compiler.api.types.ParameterKind.REST;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -43,6 +45,7 @@ import static java.util.stream.Collectors.toList;
 public class BallerinaFunctionTypeDescriptor extends AbstractTypeDescriptor implements FunctionTypeDescriptor {
 
     private List<Parameter> requiredParams;
+    private List<Parameter> defaultableParams;
     private Parameter restParam;
     private BallerinaTypeDescriptor returnType;
     private final BInvokableTypeSymbol typeSymbol;
@@ -57,16 +60,28 @@ public class BallerinaFunctionTypeDescriptor extends AbstractTypeDescriptor impl
     public List<Parameter> requiredParams() {
         if (this.requiredParams == null) {
             this.requiredParams = this.typeSymbol.params.stream()
-                    .map(SymbolFactory::createBallerinaParameter)
+                    .filter(param -> !param.defaultableParam)
+                    .map(symbol -> SymbolFactory.createBallerinaParameter(symbol, REQUIRED))
                     .collect(Collectors.collectingAndThen(toList(), Collections::unmodifiableList));
         }
         return this.requiredParams;
     }
 
     @Override
+    public List<Parameter> defaultableParams() {
+        if (this.defaultableParams == null) {
+            this.defaultableParams = this.typeSymbol.params.stream()
+                    .filter(param -> param.defaultableParam)
+                    .map(symbol -> SymbolFactory.createBallerinaParameter(symbol, DEFAULTABLE))
+                    .collect(Collectors.collectingAndThen(toList(), Collections::unmodifiableList));
+        }
+        return this.defaultableParams;
+    }
+
+    @Override
     public Optional<Parameter> restParam() {
         if (restParam == null) {
-            this.restParam = SymbolFactory.createBallerinaParameter(typeSymbol.restParam);
+            this.restParam = SymbolFactory.createBallerinaParameter(typeSymbol.restParam, REST);
         }
         return Optional.ofNullable(this.restParam);
     }
@@ -74,7 +89,7 @@ public class BallerinaFunctionTypeDescriptor extends AbstractTypeDescriptor impl
     @Override
     public Optional<BallerinaTypeDescriptor> getReturnType() {
         if (returnType == null) {
-            this.returnType = TypesFactory.getTypeDescriptor(((BInvokableType) this.getBType()).retType);
+            this.returnType = TypesFactory.getTypeDescriptor(this.typeSymbol.returnType);
         }
         return Optional.ofNullable(this.returnType);
     }
