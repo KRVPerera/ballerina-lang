@@ -1235,7 +1235,7 @@ public class SymbolEnter extends BLangNodeVisitor {
         BUnionType unionType = BUnionType.create(null, new LinkedHashSet<>());
         BTypeSymbol typeDefSymbol = Symbols.createTypeSymbol(SymTag.TYPE_DEF, Flags.asMask(typeDef.flagSet),
                 names.fromIdNode(typeDef.name), env.enclPkg.symbol.pkgID, unionType, env.scope.owner,
-                symTable.builtinPos, SOURCE);
+                typeDef.pos, SOURCE);
         typeDef.symbol = typeDefSymbol;
         if (PackageID.isLangLibPackageID(this.env.enclPkg.packageID)) {
             handleLangLibTypes(typeDef);
