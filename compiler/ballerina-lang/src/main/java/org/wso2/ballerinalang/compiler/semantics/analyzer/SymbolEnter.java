@@ -172,6 +172,7 @@ import static org.ballerinalang.model.elements.PackageID.TRANSACTION;
 import static org.ballerinalang.model.elements.PackageID.TYPEDESC;
 import static org.ballerinalang.model.elements.PackageID.VALUE;
 import static org.ballerinalang.model.elements.PackageID.XML;
+import static org.ballerinalang.model.symbols.SymbolOrigin.BUILTIN;
 import static org.ballerinalang.model.symbols.SymbolOrigin.SOURCE;
 import static org.ballerinalang.model.symbols.SymbolOrigin.VIRTUAL;
 import static org.ballerinalang.model.tree.NodeKind.IMPORT;
@@ -1238,6 +1239,7 @@ public class SymbolEnter extends BLangNodeVisitor {
                 typeDef.pos, SOURCE);
         typeDef.symbol = typeDefSymbol;
         if (PackageID.isLangLibPackageID(this.env.enclPkg.packageID)) {
+            typeDefSymbol.origin = BUILTIN;
             handleLangLibTypes(typeDef);
         } else {
             defineSymbol(typeDef.name.pos, typeDefSymbol);
