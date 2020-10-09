@@ -1002,56 +1002,53 @@ public class SymbolEnter extends BLangNodeVisitor {
         if (currentTypeNodeName.startsWith("$")) {
             return;
         }
-                String unresolvedTypeNodeName = getTypeOrClassName(unresolvedType);
-                boolean sameTypeNode = unresolvedTypeNodeName.equals(currentTypeNodeName);
-                boolean isVisited = visitedNodes.contains(currentTypeNodeName);
-                boolean typeDef =  unresolvedType.getKind() == NodeKind.TYPE_DEFINITION;
+        String unresolvedTypeNodeName = getTypeOrClassName(unresolvedType);
+        boolean sameTypeNode = unresolvedTypeNodeName.equals(currentTypeNodeName);
+        boolean isVisited = visitedNodes.contains(currentTypeNodeName);
+        boolean typeDef = unresolvedType.getKind() == NodeKind.TYPE_DEFINITION;
 
-                if (typeDef && (sameTypeNode || isVisited)) {
-                    BLangTypeDefinition typeDefinition = (BLangTypeDefinition) unresolvedType;
-                    if (fromStructuredType && typeDefinition.getTypeNode().getKind() == NodeKind.UNION_TYPE_NODE) {
-                        // Valid cyclic dependency
-                        // type A int|map<A>;
-                        typeDefinition.hasCyclicReference = true;
-                    } else {
-                        // Only type definitions with unions are allowed to have cyclic reference
-                        if (isVisited) {
-                            // Invalid dependency detected. But in here, all the types in the list might not
-                            // be necessary for the cyclic dependency error message.
-                            //
-                            // Eg - A -> B -> C -> B // Last B is what we are currently checking
-                            //
-                            // In such case, we create a new list with relevant type names.
-                            int i = visitedNodes.indexOf(currentTypeNodeName);
-                            List<String> dependencyList = new ArrayList<>(visitedNodes.size() - i);
-                            for (; i < visitedNodes.size(); i++) {
-                                dependencyList.add(visitedNodes.get(i));
-                            }
-                            if (!sameTypeNode && dependencyList.size() == 1
-                                    && dependencyList.get(0).equals(currentTypeNodeName)) {
-                                // Check to support valid scenarios such as the following
-                                // type A int\A[];
-                                // type B A;
-                                return;
-                            }
-                            // Add the `currentTypeNodeName` to complete the cycle.
-                            dependencyList.add(currentTypeNodeName);
-                            dlog.error((DiagnosticPos) unresolvedType.getPosition(),
-                                    DiagnosticCode.CYCLIC_TYPE_REFERENCE, dependencyList);
-                        } else {
-                            visitedNodes.push(currentTypeNodeName);
-                            dlog.error((DiagnosticPos) unresolvedType.getPosition(),
-                                    DiagnosticCode.CYCLIC_TYPE_REFERENCE, visitedNodes);
-                            visitedNodes.remove(currentTypeNodeName);
-                        }
+        if (typeDef && (sameTypeNode || isVisited)) {
+            BLangTypeDefinition typeDefinition = (BLangTypeDefinition) unresolvedType;
+            if (fromStructuredType && typeDefinition.getTypeNode().getKind() == NodeKind.UNION_TYPE_NODE) {
+                // Valid cyclic dependency
+                // type A int|map<A>;
+                typeDefinition.hasCyclicReference = true;
+            } else {
+                // Only type definitions with unions are allowed to have cyclic reference
+                if (isVisited) {
+                    // Invalid dependency detected. But in here, all the types in the list might not
+                    // be necessary for the cyclic dependency error message.
+                    //
+                    // Eg - A -> B -> C -> B // Last B is what we are currently checking
+                    //
+                    // In such case, we create a new list with relevant type names.
+                    int i = visitedNodes.indexOf(currentTypeNodeName);
+                    List<String> dependencyList = new ArrayList<>(visitedNodes.size() - i);
+                    for (; i < visitedNodes.size(); i++) {
+                        dependencyList.add(visitedNodes.get(i));
                     }
+                    if (!sameTypeNode && dependencyList.size() == 1
+                            && dependencyList.get(0).equals(currentTypeNodeName)) {
+                        // Check to support valid scenarios such as the following
+                        // type A int\A[];
+                        // type B A;
+                        return;
+                    }
+                    // Add the `currentTypeNodeName` to complete the cycle.
+                    dependencyList.add(currentTypeNodeName);
+                    dlog.error(unresolvedType.getPosition(), DiagnosticCode.CYCLIC_TYPE_REFERENCE, dependencyList);
+                } else {
+                    visitedNodes.push(currentTypeNodeName);
+                    dlog.error(unresolvedType.getPosition(), DiagnosticCode.CYCLIC_TYPE_REFERENCE, visitedNodes);
+                    visitedNodes.remove(currentTypeNodeName);
+                }
+            }
         } else {
             // Check whether the current type node is in the unresolved list. If it is in the list, we need to
             // check it recursively.
             List<BLangNode> typeDefinitions = unresolvedTypes.stream()
-                    .filter(node -> getTypeOrClassName(node).equals(currentTypeNodeName))
-                    .collect(Collectors.toList());
-                    BSymbol symbol = symResolver.lookupSymbolInMainSpace(env, names.fromString(currentTypeNodeName));
+                    .filter(node -> getTypeOrClassName(node).equals(currentTypeNodeName)).collect(Collectors.toList());
+
             if (typeDefinitions.isEmpty()) {
                 // If a type is declared, it should either get defined successfully or added to the unresolved
                 // types list. If a type is not in either one of them, that means it is an undefined type.
