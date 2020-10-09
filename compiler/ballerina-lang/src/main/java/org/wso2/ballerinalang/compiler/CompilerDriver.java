@@ -149,9 +149,9 @@ public class CompilerDriver {
         if (!LOAD_BUILTIN_FROM_SOURCE) {
             symbolTable.langAnnotationModuleSymbol = pkgLoader.loadPackageSymbol(ANNOTATIONS, null, null);
             symbolTable.langJavaModuleSymbol = pkgLoader.loadPackageSymbol(JAVA, null, null);
+            symResolver.reloadErrorAndDependentTypes();
             symResolver.loadAnydataAndDependentTypes();
             symResolver.loadJSONAndDependentTypes();
-            symResolver.reloadErrorAndDependentTypes();
             symResolver.defineOperators();
             symbolTable.langInternalModuleSymbol = pkgLoader.loadPackageSymbol(INTERNAL, null, null);
             symResolver.reloadIntRangeType();
@@ -191,9 +191,9 @@ public class CompilerDriver {
 
         // Other lang modules requires annotation module. Hence loading it first.
         symbolTable.langAnnotationModuleSymbol = pkgLoader.loadPackageSymbol(ANNOTATIONS, null, null);
+        symResolver.reloadErrorAndDependentTypes();
         symResolver.loadAnydataAndDependentTypes();
         symResolver.loadJSONAndDependentTypes();
-        symResolver.reloadErrorAndDependentTypes();
         symResolver.defineOperators();
 
         if (langLib.equals(JAVA)) {
