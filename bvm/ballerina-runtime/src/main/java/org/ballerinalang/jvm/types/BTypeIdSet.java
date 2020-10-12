@@ -17,9 +17,8 @@
  */
 package org.ballerinalang.jvm.types;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represent Ballerina distinct types type-ids in the runtime.
@@ -27,10 +26,10 @@ import java.util.Set;
  * @since 2.0
  */
 public class BTypeIdSet {
-    Set<TypeId> ids;
+    List<TypeId> ids;
 
     public BTypeIdSet() {
-        this.ids = new HashSet<>();
+        this.ids = new ArrayList<>();
     }
 
     public void add(BPackage pkg, String name, boolean isPrimary) {
@@ -41,8 +40,20 @@ public class BTypeIdSet {
         if (other == null) {
             return true;
         }
-
-        return ids.containsAll(other.ids);
+        // All items in other set is present in current.
+        for (TypeId id : other.ids) {
+            boolean found = false;
+            for (TypeId otherTypeId : ids) {
+                if (id.name.equals(otherTypeId.name) && id.pkg.equals(otherTypeId.pkg)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -63,10 +74,9 @@ public class BTypeIdSet {
 
         @Override
         public int hashCode() {
-            return Objects.hash(pkg, name, isPrimary);
+            return pkg.hashCode() * 31 + name.hashCode() + (isPrimary ? 0 : 1);
         }
 
-        // Equals operator does not take `this.isPrimary`
         @Override
         public boolean equals(Object obj) {
             if (obj == this) {

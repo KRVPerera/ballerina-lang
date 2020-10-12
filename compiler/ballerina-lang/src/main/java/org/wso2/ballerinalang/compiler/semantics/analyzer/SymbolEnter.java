@@ -433,7 +433,7 @@ public class SymbolEnter extends BLangNodeVisitor {
 
     private void populateDistinctTypeIdsFromIncludedTypeReferences(BLangClassDefinition typeDef) {
         BLangClassDefinition classDefinition = typeDef;
-        if (!classDefinition.flagSet.contains(Flag.DISTINCT)) {
+        if (!classDefinition.flagSet.contains(Flag.DISTINCT) && !classDefinition.induceTypeIds) {
             return;
         }
 
@@ -591,11 +591,10 @@ public class SymbolEnter extends BLangNodeVisitor {
         return classDefinitions;
     }
 
-    @Override
-    public void visit(BLangObjectConstructorExpression bLangObjectConstructorExpression) {
-
-        throw new AssertionError();
-    }
+//    @Override
+//    public void visit(BLangObjectConstructorExpression bLangObjectConstructorExpression) {
+//        throw new AssertionError();
+//    }
 
     @Override
     public void visit(BLangClassDefinition classDefinition) {
@@ -618,7 +617,7 @@ public class SymbolEnter extends BLangNodeVisitor {
             objectType = isReadOnly ? new BObjectType(tSymbol, Flags.READONLY) : new BObjectType(tSymbol);
         }
 
-        if (flags.contains(Flag.DISTINCT)) {
+        if (flags.contains(Flag.DISTINCT) || classDefinition.induceTypeIds) {
             objectType.typeIdSet = BTypeIdSet.from(env.enclPkg.symbol.pkgID, classDefinition.name.value, isPublicType,
                     BTypeIdSet.emptySet());
         }
