@@ -18,7 +18,6 @@
 
 package org.wso2.ballerinalang.compiler.semantics.analyzer;
 
-import io.ballerina.tools.diagnostics.Location;
 import org.ballerinalang.compiler.CompilerPhase;
 import org.ballerinalang.model.clauses.OrderKeyNode;
 import org.ballerinalang.model.elements.Flag;
@@ -200,6 +199,7 @@ import org.wso2.ballerinalang.compiler.util.CompilerContext;
 import org.wso2.ballerinalang.compiler.util.Name;
 import org.wso2.ballerinalang.compiler.util.Names;
 import org.wso2.ballerinalang.compiler.util.TypeTags;
+import org.wso2.ballerinalang.compiler.util.diagnotic.DiagnosticPos;
 import org.wso2.ballerinalang.util.Flags;
 
 import java.util.ArrayList;
@@ -259,7 +259,6 @@ public class IsolationAnalyzer extends BLangNodeVisitor {
     }
 
     public BLangPackage analyze(BLangPackage pkgNode) {
-        this.dlog.setCurrentPackageId(pkgNode.packageID);
         SymbolEnv pkgEnv = this.symTable.pkgEnvMap.get(pkgNode.symbol);
         analyzeNode(pkgNode, pkgEnv);
         return pkgNode;
@@ -1766,7 +1765,7 @@ public class IsolationAnalyzer extends BLangNodeVisitor {
         if (restArgs.get(restArgs.size() - 1).getKind() == NodeKind.REST_ARGS_EXPR) {
             BLangRestArgsExpression varArg = (BLangRestArgsExpression) restArgs.get(restArgs.size() - 1);
             BType varArgType = varArg.type;
-            Location varArgPos = varArg.pos;
+            DiagnosticPos varArgPos = varArg.pos;
 
             if (varArgType == symTable.semanticError) {
                 return;
@@ -1923,7 +1922,7 @@ public class IsolationAnalyzer extends BLangNodeVisitor {
         }
     }
 
-    private void analyzeVarArgIsolatedness(BLangRestArgsExpression restArgsExpression, Location pos) {
+    private void analyzeVarArgIsolatedness(BLangRestArgsExpression restArgsExpression, DiagnosticPos pos) {
         BLangExpression expr = restArgsExpression.expr;
         if (expr.getKind() == NodeKind.LIST_CONSTRUCTOR_EXPR) {
             for (BLangExpression expression : ((BLangListConstructorExpr) expr).exprs) {
