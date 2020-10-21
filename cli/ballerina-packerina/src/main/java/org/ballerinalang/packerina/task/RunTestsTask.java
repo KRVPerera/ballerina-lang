@@ -211,15 +211,25 @@ public class RunTestsTask implements Task {
                 if (coverageResult != 0) {
                     throw createLauncherException("error while generating test report");
                 }
-                Path coverageJsonPath = jsonPath.resolve(TesterinaConstants.COVERAGE_FILE);
+            }
+        }
+
+        // Load Coverage data from the files only after each module's coverage data has been finalized
+        for (BLangPackage bLangPackage : moduleBirMap) {
+            // Check and update coverage
+            Path jsonPath = buildContext.getTestJsonPathTargetCache(bLangPackage.packageID);
+            Path coverageJsonPath = jsonPath.resolve(TesterinaConstants.COVERAGE_FILE);
+
+            if (coverageJsonPath.toFile().exists()) {
                 try {
                     ModuleCoverage moduleCoverage = loadModuleCoverageFromFile(coverageJsonPath);
                     testReport.addCoverage(String.valueOf(bLangPackage.packageID.name), moduleCoverage);
                 } catch (IOException e) {
-                    throw createLauncherException("error while generating test report", e);
+                    throw createLauncherException("error while generating test report :", e);
                 }
             }
         }
+
         if ((report || coverage) && (testReport.getModuleStatus().size() > 0)) {
             testReport.finalizeTestResults(coverage);
             generateHtmlReport(buildContext.out(), testReport, targetDir);
@@ -245,10 +255,11 @@ public class RunTestsTask implements Task {
         suite.setSourceRootPath(sourceRootPath.toString());
         // add module functions
         bLangPackage.functions.forEach(function -> {
-            String functionClassName = BFileUtil.getQualifiedClassName(bLangPackage.packageID.orgName.value,
-                                                                       bLangPackage.packageID.name.value,
-                                                                       bLangPackage.packageID.version.value,
-                                                                       getClassName(function.pos.src.cUnitName));
+            String functionClassName =
+                    BFileUtil.getQualifiedClassName(bLangPackage.packageID.orgName.value,
+                                                    bLangPackage.packageID.name.value,
+                                                    bLangPackage.packageID.version.value,
+                                                    getClassName(function.pos.lineRange().filePath()));
             suite.addTestUtilityFunction(function.name.value, functionClassName);
         });
         // add test functions
@@ -257,10 +268,11 @@ public class RunTestsTask implements Task {
             suite.setTestStartFunctionName(bLangPackage.getTestablePkg().startFunction.name.value);
             suite.setTestStopFunctionName(bLangPackage.getTestablePkg().stopFunction.name.value);
             bLangPackage.getTestablePkg().functions.forEach(function -> {
-                String functionClassName = BFileUtil.getQualifiedClassName(bLangPackage.packageID.orgName.value,
-                                                                           bLangPackage.packageID.name.value,
-                                                                           bLangPackage.packageID.version.value,
-                                                                           getClassName(function.pos.src.cUnitName));
+                String functionClassName =
+                        BFileUtil.getQualifiedClassName(bLangPackage.packageID.orgName.value,
+                                                        bLangPackage.packageID.name.value,
+                                                        bLangPackage.packageID.version.value,
+                                                        getClassName(function.pos.lineRange().filePath()));
                 suite.addTestUtilityFunction(function.name.value, functionClassName);
             });
         } else {
@@ -358,7 +370,7 @@ public class RunTestsTask implements Task {
                         + targetDir.resolve(TesterinaConstants.COVERAGE_DIR)
                         .resolve(TesterinaConstants.EXEC_FILE_NAME).toString();
                 if (!TesterinaConstants.DOT.equals(packageName)) {
-                    agentCommand += ",includes=" + orgName + "." + packageName + ".*";
+                    agentCommand += ",includes=" + orgName + ".*";
                 }
                 cmdArgs.add(agentCommand);
             }
