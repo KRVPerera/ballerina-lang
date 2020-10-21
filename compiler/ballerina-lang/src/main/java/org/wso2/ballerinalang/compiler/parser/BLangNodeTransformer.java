@@ -977,9 +977,9 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
      */
     @Override
     public BLangNode transform(ObjectConstructorExpressionNode objectConstructorExpressionNode) {
-        Location pos = getPositionWithoutMetadata(objectConstructorExpressionNode);
-        BLangClassDefinition annonClassDef = createObjectExpressionBody(objectConstructorExpressionNode.members());
-        annonClassDef.pos = pos;
+        DiagnosticPos pos = getPositionWithoutMetadata(objectConstructorExpressionNode);
+        BLangClassDefinition annonClass = transformObjectExpressionBody(objectConstructorExpressionNode.members());
+        annonClass.pos = pos;
         BLangObjectConstructorExpression objectCtorExpression = TreeBuilder.createObjectCtorExpression();
         objectCtorExpression.pos = pos;
         objectCtorExpression.classNode = annonClass;
