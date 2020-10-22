@@ -694,8 +694,8 @@ public class NodeCloner extends BLangNodeVisitor {
         BLangMatchClause clone = new BLangMatchClause();
         source.cloneRef = clone;
         clone.matchPatterns = cloneList(source.matchPatterns);
-        clone.setMatchGuard(source.getMatchGuard());
-        clone.setBlockStatement(source.getBLockStatement());
+        clone.setMatchGuard(clone(source.getMatchGuard()));
+        clone.setBlockStatement(clone(source.getBLockStatement()));
         clone.expr = source.expr;
     }
 
@@ -2125,16 +2125,18 @@ public class NodeCloner extends BLangNodeVisitor {
         clone.initFunction = clone(source.initFunction);
         clone.generatedInitFunction = clone(source.generatedInitFunction);
         clone.receiver = clone(source.receiver);
+        clone.induceTypeIds = source.induceTypeIds;
     }
 
     @Override
     public void visit(BLangObjectConstructorExpression source) {
         BLangObjectConstructorExpression clone = new BLangObjectConstructorExpression();
 
-        clone.classNode = clone(source.classNode);
         clone.pos = source.pos;
-        clone.referenceType = clone(source.referenceType);
+        clone.classNode = clone(source.classNode);
         clone.typeInit = clone(source.typeInit);
+        clone.referenceType = clone(source.referenceType);
+        clone.isClient = source.isClient;
 
         source.cloneRef = clone;
     }

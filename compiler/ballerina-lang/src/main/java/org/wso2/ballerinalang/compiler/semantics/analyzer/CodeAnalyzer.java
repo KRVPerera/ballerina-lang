@@ -115,6 +115,7 @@ import org.wso2.ballerinalang.compiler.tree.expressions.BLangListConstructorExpr
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangLiteral;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangMatchExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangNamedArgsExpression;
+import org.wso2.ballerinalang.compiler.tree.expressions.BLangObjectConstructorExpression;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryAction;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangQueryExpr;
 import org.wso2.ballerinalang.compiler.tree.expressions.BLangRawTemplateLiteral;
@@ -403,6 +404,11 @@ public class CodeAnalyzer extends BLangNodeVisitor {
         }
 
         classDefinition.annAttachments.forEach(annotationAttachment -> analyzeNode(annotationAttachment, env));
+    }
+
+    @Override
+    public void visit(BLangObjectConstructorExpression objectConstructorExpression) {
+        visit(objectConstructorExpression.typeInit);
     }
 
     @Override
@@ -724,14 +730,13 @@ public class CodeAnalyzer extends BLangNodeVisitor {
         if (this.statementReturns) {
             this.dlog.error(stmt.pos, DiagnosticCode.UNREACHABLE_CODE);
             this.resetStatementReturns();
+        } else if (errorThrown) {
+            this.dlog.error(stmt.pos, DiagnosticCode.UNREACHABLE_CODE);
+            this.resetErrorThrown();
         }
         if (lastStatement) {
             this.dlog.error(stmt.pos, DiagnosticCode.UNREACHABLE_CODE);
             this.resetLastStatement();
-        }
-        if (errorThrown) {
-            this.dlog.error(stmt.pos, DiagnosticCode.UNREACHABLE_CODE);
-            this.resetErrorThrown();
         }
     }
 

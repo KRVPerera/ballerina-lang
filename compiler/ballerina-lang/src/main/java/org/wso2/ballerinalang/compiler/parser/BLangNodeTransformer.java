@@ -544,7 +544,7 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
         TypedBindingPatternNode typedBindingPattern = modVarDeclrNode.typedBindingPattern();
         CaptureBindingPatternNode bindingPattern = (CaptureBindingPatternNode) typedBindingPattern.bindingPattern();
         BLangSimpleVariable simpleVar = createSimpleVar(bindingPattern.variableName(),
-                typedBindingPattern.typeDescriptor(), modVarDeclrNode.initializer(),
+                typedBindingPattern.typeDescriptor(), modVarDeclrNode.initializer().orElse(null),
                 modVarDeclrNode.finalKeyword().isPresent(), false, null,
                 getAnnotations(modVarDeclrNode.metadata()));
         simpleVar.pos = getPositionWithoutMetadata(modVarDeclrNode);
@@ -926,7 +926,7 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
         return deSugarTypeAsUserDefType(objectTypeNode);
     }
 
-    public BLangClassDefinition createObjectExpressionBody(NodeList<Node> members) {
+    public BLangClassDefinition transformObjectExpressionBody(NodeList<Node> members) {
         BLangClassDefinition classDefinition = (BLangClassDefinition) TreeBuilder.createClassDefNode();
         classDefinition.flagSet.add(Flag.ANONYMOUS);
 
@@ -978,30 +978,31 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
     @Override
     public BLangNode transform(ObjectConstructorExpressionNode objectConstructorExpressionNode) {
         DiagnosticPos pos = getPositionWithoutMetadata(objectConstructorExpressionNode);
-        BLangClassDefinition annonClassDef = createObjectExpressionBody(objectConstructorExpressionNode.members());
-        annonClassDef.pos = pos;
+        BLangClassDefinition annonClass = transformObjectExpressionBody(objectConstructorExpressionNode.members());
+        annonClass.pos = pos;
         BLangObjectConstructorExpression objectCtorExpression = TreeBuilder.createObjectCtorExpression();
         objectCtorExpression.pos = pos;
-        objectCtorExpression.classNode = annonClassDef;
+        objectCtorExpression.classNode = annonClass;
 
         // Generate a name for the anonymous object
         String genName = anonymousModelHelper.getNextAnonymousTypeKey(diagnosticSource.pkgID);
         IdentifierNode anonTypeGenName = createIdentifier(pos, genName);
-        annonClassDef.setName(anonTypeGenName);
-        annonClassDef.flagSet.add(Flag.PUBLIC);
+        annonClass.setName(anonTypeGenName);
+        annonClass.flagSet.add(Flag.PUBLIC);
+        annonClass.induceTypeIds = true;
 
         Optional<TypeDescriptorNode> typeReference = objectConstructorExpressionNode.typeReference();
         typeReference.ifPresent(typeReferenceNode -> {
             objectCtorExpression.addTypeReference(createTypeNode(typeReferenceNode));
         });
 
-        annonClassDef.annAttachments = applyAll(objectConstructorExpressionNode.annotations());
-        addToTop(annonClassDef);
+        annonClass.annAttachments = applyAll(objectConstructorExpressionNode.annotations());
+        addToTop(annonClass);
 
         NodeList<Token> objectConstructorQualifierList = objectConstructorExpressionNode.objectTypeQualifiers();
         for (Token qualifier : objectConstructorQualifierList) {
             if (qualifier.kind() == SyntaxKind.CLIENT_KEYWORD) {
-                annonClassDef.flagSet.add(Flag.CLIENT);
+                annonClass.flagSet.add(Flag.CLIENT);
                 objectCtorExpression.isClient = true;
             } else {
                 throw new RuntimeException("Syntax kind is not supported: " + qualifier.kind());
@@ -1009,7 +1010,7 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
         }
 
         BLangIdentifier identifier = (BLangIdentifier) TreeBuilder.createIdentifierNode();
-        BLangUserDefinedType userDefinedType = createUserDefinedType(pos, identifier, annonClassDef.name);
+        BLangUserDefinedType userDefinedType = createUserDefinedType(pos, identifier, annonClass.name);
 
         BLangTypeInit initNode = (BLangTypeInit) TreeBuilder.createInitNode();
         initNode.pos = pos;
@@ -1018,7 +1019,7 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
         BLangInvocation invocationNode = (BLangInvocation) TreeBuilder.createInvocationNode();
         invocationNode.pos = pos;
         BLangIdentifier pkgAlias = createIdentifier(pos, "");
-        BLangNameReference nameReference =  new BLangNameReference(pos, null, pkgAlias, annonClassDef.name);
+        BLangNameReference nameReference =  new BLangNameReference(pos, null, pkgAlias, annonClass.name);
 
         invocationNode.name = (BLangIdentifier) nameReference.name;
         invocationNode.pkgAlias = (BLangIdentifier) nameReference.pkgAlias;
@@ -1026,9 +1027,8 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
         initNode.argsExpr.addAll(invocationNode.argExprs);
         initNode.initInvocation = invocationNode;
 
-        objectCtorExpression.classNode = annonClassDef;
         objectCtorExpression.typeInit = initNode;
-        return initNode;
+        return objectCtorExpression;
     }
 
     @Override
@@ -1048,7 +1048,7 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
 
     @Override
     public BLangNode transform(ServiceDeclarationNode serviceDeclrNode) {
-        return createService(serviceDeclrNode, serviceDeclrNode.serviceName(), false);
+        return createService(serviceDeclrNode, serviceDeclrNode.serviceName().orElse(null), false);
     }
 
     private BLangNode createService(Node serviceNode, IdentifierToken serviceNameNode, boolean isAnonServiceValue) {
@@ -2209,7 +2209,7 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
     @Override
     public BLangNode transform(FlushActionNode flushActionNode) {
         BLangWorkerFlushExpr workerFlushExpr = TreeBuilder.createWorkerFlushExpressionNode();
-        Node optionalPeerWorker = flushActionNode.peerWorker();
+        Node optionalPeerWorker = flushActionNode.peerWorker().orElse(null);
         if (optionalPeerWorker != null) {
             SimpleNameReferenceNode peerWorker = (SimpleNameReferenceNode) optionalPeerWorker;
             workerFlushExpr.workerIdentifier = createIdentifier(peerWorker.name());
@@ -3342,7 +3342,7 @@ public class BLangNodeTransformer extends NodeTransformer<BLangNode> {
 
     public BLangNode transform(EnumDeclarationNode enumDeclarationNode) {
         Boolean publicQualifier = false;
-        if (enumDeclarationNode.qualifier() != null && enumDeclarationNode.qualifier().kind()
+        if (enumDeclarationNode.qualifier().isPresent() && enumDeclarationNode.qualifier().get().kind()
                 == SyntaxKind.PUBLIC_KEYWORD) {
             publicQualifier = true;
         }
