@@ -29,8 +29,10 @@ import org.wso2.ballerinalang.util.Flags;
  */
 public class BOperatorSymbol extends BInvokableSymbol {
 
+    private static final int DEFAULT_PARAM_COUNT = 2;
+
     public BOperatorSymbol(Name name, PackageID pkgID, BType type, BSymbol owner, Location pos,
                            SymbolOrigin origin) {
-        super(SymTag.INVOKABLE, Flags.PUBLIC, name, pkgID, type, owner, pos, origin);
+        super(SymTag.INVOKABLE, Flags.PUBLIC, name, pkgID, type, owner, pos, origin, DEFAULT_PARAM_COUNT);
     }
 }

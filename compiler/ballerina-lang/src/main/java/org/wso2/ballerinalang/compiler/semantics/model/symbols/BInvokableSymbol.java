@@ -75,6 +75,22 @@ public class BInvokableSymbol extends BVarSymbol implements InvokableSymbol {
         this.paramDefaultValTypes = new HashMap<>();
     }
 
+    public BInvokableSymbol(int tag,
+                            long flags,
+                            Name name,
+                            PackageID pkgID,
+                            BType type,
+                            BSymbol owner,
+                            Location pos,
+                            SymbolOrigin origin, int params) {
+        super(flags, name, pkgID, type, owner, pos, origin);
+        this.tag = tag;
+        this.params = new ArrayList<>(params);
+        this.annAttachments = null;
+        this.dependentGlobalVars = null;
+        this.paramDefaultValTypes = null;
+    }
+
     @Override
     public List<BVarSymbol> getParameters() {
         return params;
