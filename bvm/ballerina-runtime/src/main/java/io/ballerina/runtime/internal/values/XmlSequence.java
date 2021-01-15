@@ -65,7 +65,7 @@ public final class XmlSequence extends XmlValue implements BXmlSequence {
     }
 
     public XmlSequence(BXml child) {
-        this.children = new ArrayList<>();
+        this.children = new ArrayList<>(1);
         if (!child.isEmpty()) {
             this.children.add(child);
         }
@@ -364,7 +364,8 @@ public final class XmlSequence extends XmlValue implements BXmlSequence {
         }
 
         int j = 0;
-        List<BXml> elementsSeq = new ArrayList<>();
+
+        List<BXml> elementsSeq = new ArrayList<>((int) endIndex);
         for (int i = (int) startIndex; i < endIndex; i++) {
             elementsSeq.add(j++, children.get(i));
         }
