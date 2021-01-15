@@ -222,7 +222,7 @@ public class BalStringUtils {
     public static Object parseTupleExpressionStringValue(String exprValue, BLink parent) {
         String[] stringElements = exprValue.split(" ");
         Object[] elements = new Object[stringElements.length];
-        List<Type> typeList = new ArrayList<>();
+        List<Type> typeList = new ArrayList<>(stringElements.length);
         for (int i = 0; i < stringElements.length; i++) {
             Object value = StringUtils.parseExpressionStringValue(stringElements[i], parent);
             elements[i] = value;
