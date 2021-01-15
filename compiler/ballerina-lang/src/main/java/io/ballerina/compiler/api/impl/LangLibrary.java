@@ -125,7 +125,7 @@ public class LangLibrary {
 
         Map<String, BInvokableSymbol> methods = langLibMethods.get(langLibName);
 
-        List<FunctionSymbol> wrappedMethods = new ArrayList<>();
+        List<FunctionSymbol> wrappedMethods = new ArrayList<>(methods.size());
         wrappedLangLibMethods.put(langLibName, wrappedMethods);
         populateMethodList(wrappedMethods, methods);
 
