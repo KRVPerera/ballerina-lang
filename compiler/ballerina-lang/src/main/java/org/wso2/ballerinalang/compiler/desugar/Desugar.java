@@ -2599,7 +2599,7 @@ public class Desugar extends BLangNodeVisitor {
         parentBlockStmt.addStatement(detailTempVarDef);
         this.env.scope.define(names.fromIdNode(detailTempVarDef.var.name), detailTempVarDef.var.symbol);
 
-        List<String> extractedKeys = new ArrayList<>();
+        List<String> extractedKeys = new ArrayList<>(parentErrorVarRef.detail.size());
         for (BLangNamedArgsExpression detail : parentErrorVarRef.detail) {
             extractedKeys.add(detail.name.value);
             BLangVariableReference ref = (BLangVariableReference) detail.expr;
@@ -3563,7 +3563,7 @@ public class Desugar extends BLangNodeVisitor {
     }
 
     private List<String> getKeysToRemove(BLangMappingMatchPattern mappingMatchPattern) {
-        List<String> keysToRemove = new ArrayList<>();
+        List<String> keysToRemove = new ArrayList<>(mappingMatchPattern.fieldMatchPatterns.size());
         for (BLangFieldMatchPattern fieldMatchPattern : mappingMatchPattern.fieldMatchPatterns) {
             keysToRemove.add(fieldMatchPattern.fieldName.value);
         }
@@ -3720,8 +3720,9 @@ public class Desugar extends BLangNodeVisitor {
         BLangRecordTypeNode recordTypeNode = new BLangRecordTypeNode();
         recordTypeNode.pos = pos;
         recordTypeNode.type = recordType;
-        List<BLangSimpleVariable> typeDefFields = new ArrayList<>();
-        for (BField field : recordType.fields.values()) {
+        var fieldValues = recordType.fields.values();
+        List<BLangSimpleVariable> typeDefFields = new ArrayList<>(fieldValues.size());
+        for (BField field : fieldValues) {
             typeDefFields.add(ASTBuilderUtil.createVariable(field.pos, field.name.value, field.type, null,
                     field.symbol));
         }
@@ -4431,7 +4432,7 @@ public class Desugar extends BLangNodeVisitor {
     }
 
     BLangUnaryExpr createNotBinaryExpression(Location pos, BLangExpression expression) {
-        List<BType> paramTypes = new ArrayList<>();
+        List<BType> paramTypes = new ArrayList<>(1);
         paramTypes.add(symTable.booleanType);
         BInvokableType type = new BInvokableType(paramTypes, symTable.booleanType,
                 null);
@@ -4458,7 +4459,7 @@ public class Desugar extends BLangNodeVisitor {
         func.body = lambdaBody;
         func.desugared = false;
         lambdaFunction.pos = pos;
-        List<BType> paramTypes = new ArrayList<>();
+        List<BType> paramTypes = new ArrayList<>(lambdaFunctionVariable.size());
         lambdaFunctionVariable.forEach(variable -> paramTypes.add(variable.symbol.type));
         lambdaFunction.type = new BInvokableType(paramTypes, func.symbol.type.getReturnType(),
                                                  null);
@@ -4528,7 +4529,7 @@ public class Desugar extends BLangNodeVisitor {
         BLangArrayLiteral arrayLiteralNode = (BLangArrayLiteral) TreeBuilder.createArrayLiteralExpressionNode();
         arrayLiteralNode.type = literalExpr.type;
         arrayLiteralNode.pos = literalExpr.pos;
-        arrayLiteralNode.exprs = new ArrayList<>();
+        arrayLiteralNode.exprs = new ArrayList<>(values.length);
         for (byte b : values) {
             arrayLiteralNode.exprs.add(createByteLiteral(literalExpr.pos, b));
         }
@@ -4850,7 +4851,7 @@ public class Desugar extends BLangNodeVisitor {
 
         // todo: handle taint table; issue: https://github.com/ballerina-platform/ballerina-lang/issues/25962
 
-        ArrayList<BLangExpression> requiredArgs = new ArrayList<>();
+        ArrayList<BLangExpression> requiredArgs = new ArrayList<>(originalMemberFuncSymbol.params.size());
         for (BVarSymbol param : originalMemberFuncSymbol.params) {
             BLangSimpleVariable fParam = (BLangSimpleVariable) TreeBuilder.createSimpleVariableNode();
             fParam.symbol = new BVarSymbol(0, param.name, env.enclPkg.packageID, param.type,  funcSymbol, pos,
@@ -4866,7 +4867,7 @@ public class Desugar extends BLangNodeVisitor {
             requiredArgs.add(paramRef);
         }
 
-        ArrayList<BLangExpression> restArgs = new ArrayList<>();
+        ArrayList<BLangExpression> restArgs = new ArrayList<>(1);
         if (originalMemberFuncSymbol.restParam != null) {
             BLangSimpleVariable restParam = (BLangSimpleVariable) TreeBuilder.createSimpleVariableNode();
             func.restParam = restParam;
@@ -4999,7 +5000,7 @@ public class Desugar extends BLangNodeVisitor {
     }
 
     private BLangAccessExpression rewriteXMLAttributeOrElemNameAccess(BLangFieldBasedAccess fieldAccessExpr) {
-        ArrayList<BLangExpression> args = new ArrayList<>();
+
 
         String fieldName = fieldAccessExpr.field.value;
         if (fieldAccessExpr.fieldKind == FieldKind.WITH_NS) {
@@ -5015,6 +5016,7 @@ public class Desugar extends BLangNodeVisitor {
         }
 
         BLangLiteral attributeNameLiteral = createStringLiteral(fieldAccessExpr.field.pos, fieldName);
+        ArrayList<BLangExpression> args = new ArrayList<>(2);
         args.add(attributeNameLiteral);
         args.add(isOptionalAccessToLiteral(fieldAccessExpr));
 
@@ -5069,10 +5071,11 @@ public class Desugar extends BLangNodeVisitor {
         } else if (varRefType.tag == TypeTags.TABLE) {
             if (targetVarRef.indexExpr.getKind() == NodeKind.TABLE_MULTI_KEY) {
                 BLangTupleLiteral listConstructorExpr = new BLangTupleLiteral();
-                listConstructorExpr.exprs = ((BLangTableMultiKeyExpr) indexAccessExpr.indexExpr).multiKeyIndexExprs;
-                List<BType> memberTypes = new ArrayList<>();
-                ((BLangTableMultiKeyExpr) indexAccessExpr.indexExpr).multiKeyIndexExprs.
-                        forEach(expression -> memberTypes.add(expression.type));
+                List<BLangExpression> multiKeyExprs =
+                        ((BLangTableMultiKeyExpr) indexAccessExpr.indexExpr).multiKeyIndexExprs;
+                listConstructorExpr.exprs = multiKeyExprs;
+                List<BType> memberTypes = new ArrayList<>(multiKeyExprs.size());
+                multiKeyExprs.forEach(expression -> memberTypes.add(expression.type));
                 listConstructorExpr.type = new BTupleType(memberTypes);
                 indexAccessExpr.indexExpr = listConstructorExpr;
             }
@@ -6189,7 +6192,7 @@ public class Desugar extends BLangNodeVisitor {
         BXMLNSSymbol defaultNSSymbol = nameBXMLNSSymbolMap.get(names.fromString(XMLConstants.DEFAULT_NS_PREFIX));
         String defaultNS = defaultNSSymbol != null ? defaultNSSymbol.namespaceURI : null;
 
-        ArrayList<BLangExpression> args = new ArrayList<>();
+        ArrayList<BLangExpression> args = new ArrayList<>(filters.size());
         for (BLangXMLElementFilter filter : filters) {
             BSymbol nsSymbol = symResolver.lookupSymbolInPrefixSpace(env, names.fromString(filter.namespace));
             if (nsSymbol == symTable.notFoundSymbol) {
@@ -6228,7 +6231,7 @@ public class Desugar extends BLangNodeVisitor {
 
         invocationNode.symbol = symResolver.lookupLangLibMethod(symTable.xmlType, names.fromString(functionName));
 
-        ArrayList<BLangExpression> requiredArgs = new ArrayList<>();
+        ArrayList<BLangExpression> requiredArgs = new ArrayList<>(args.size() + 1);
         requiredArgs.add(invokeOnExpr);
         requiredArgs.addAll(args);
         invocationNode.requiredArgs = requiredArgs;
@@ -6688,9 +6691,7 @@ public class Desugar extends BLangNodeVisitor {
         invocationNode.symbol = symResolver.lookupLangLibMethodInModule(symTable.langInternalModuleSymbol,
                 names.fromString(functionName));
 
-        ArrayList<BLangExpression> requiredArgs = new ArrayList<>();
-        requiredArgs.addAll(args);
-        invocationNode.requiredArgs = requiredArgs;
+        invocationNode.requiredArgs = new ArrayList<>(args);
 
         invocationNode.type = retType != null ? retType : ((BInvokableSymbol) invocationNode.symbol).retType;
         invocationNode.langLibInvocation = true;
