@@ -424,7 +424,6 @@ public class SymbolEnter extends BLangNodeVisitor {
         this.intersectionTypes.clear();
     }
 
-
     private void populateSecondaryTypeIdSet(Set<BTypeIdSet.BTypeId> secondaryTypeIds, BErrorType typeOne) {
         secondaryTypeIds.addAll(typeOne.typeIdSet.primary);
         secondaryTypeIds.addAll(typeOne.typeIdSet.secondary);
@@ -1423,9 +1422,8 @@ public class SymbolEnter extends BLangNodeVisitor {
     }
 
     private BEnumSymbol createEnumSymbol(BLangTypeDefinition typeDefinition, BType definedType) {
-        List<BConstantSymbol> enumMembers = new ArrayList<>();
-
         List<BLangType> members = ((BLangUnionTypeNode) typeDefinition.typeNode).memberTypeNodes;
+        List<BConstantSymbol> enumMembers = new ArrayList<>(members.size());
         for (BLangType member : members) {
             enumMembers.add((BConstantSymbol) ((BLangUserDefinedType) member).symbol);
         }
@@ -2260,7 +2258,7 @@ public class SymbolEnter extends BLangNodeVisitor {
                 .map(field -> new BField(names.fromIdNode(field.name), field.pos, field.symbol))
                 .collect(getFieldCollector());
 
-        List<BType> list = new ArrayList<>();
+        List<BType> list = new ArrayList<>(structureTypeNode.typeRefs.size());
         for (BLangType tRef : structureTypeNode.typeRefs) {
             BType type = tRef.type;
             list.add(type);
@@ -2596,7 +2594,7 @@ public class SymbolEnter extends BLangNodeVisitor {
     private void defineInvokableSymbolParams(BLangInvokableNode invokableNode, BInvokableSymbol invokableSymbol,
                                              SymbolEnv invokableEnv) {
         boolean foundDefaultableParam = false;
-        List<BVarSymbol> paramSymbols = new ArrayList<>();
+        List<BVarSymbol> paramSymbols = new ArrayList<>(invokableNode.requiredParams.size());
         Set<String> requiredParamNames = new HashSet<>();
         invokableNode.clonedEnv = invokableEnv.shallowClone();
         for (BLangSimpleVariable varNode : invokableNode.requiredParams) {
