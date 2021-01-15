@@ -492,7 +492,7 @@ public class ValueCreator {
      * @return xml sequence
      */
     public static BXmlSequence createXmlSequence(BArray sequence) {
-        List<BXml> children = new ArrayList<>();
+        List<BXml> children = new ArrayList<>(sequence.getValues().length);
         for (Object value : sequence.getValues()) {
             children.add((BXml) value);
         }
