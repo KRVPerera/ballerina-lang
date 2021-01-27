@@ -58,16 +58,6 @@ public isolated function detail(error<DetailType> e) returns DetailType = @java:
     'class: "org.ballerinalang.langlib.error.Detail",
     name: "detail"
 } external;
-//public function detail(error<DetailType> e) returns readonly & DetailType = external;
-
-# Returns an object representing the stack trace of the error.
-#
-# + e - the error value
-# + return - a new object representing the stack trace of the error value
-public isolated function stackTrace(error e) returns CallStack = @java:Method {
-    'class: "org.ballerinalang.langlib.error.StackTrace",
-    name: "stackTrace"
-} external;
 
 # Representation of `CallStackElement`
 #
@@ -88,6 +78,16 @@ public type CallStackElement record {|
 public class CallStack {
     public CallStackElement[] callStack = [];
 }
+
+# Returns an object representing the stack trace of the error.
+#
+# + e - the error value
+# + return - a new object representing the stack trace of the error value
+public isolated function stackTrace(error e) returns CallStack = @java:Method {
+    'class: "org.ballerinalang.langlib.error.StackTrace",
+    name: "stackTrace"
+} external;
+
 
 # Converts an error to a string.
 #
