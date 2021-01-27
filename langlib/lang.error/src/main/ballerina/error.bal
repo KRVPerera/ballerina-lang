@@ -17,12 +17,13 @@
 import ballerina/jballerina.java;
 import ballerina/lang.'value as value;
 
-# The type of value to which `clone` and `cloneReadOnly` can be applied.
-type __Cloneable1 readonly|xml|__Cloneable1[]|map<__Cloneable1>|table<map<__Cloneable1>>;
+# Type for value that can be cloned.
+# This is the same as in lang.value, but is copied here to avoid a dependency.
+type Cloneable readonly|xml|Cloneable[]|map<Cloneable>|table<map<Cloneable>>;
 
 # The type to which error detail records must belong.
 public type Detail record {|
-   __Cloneable1...;
+   Cloneable...;
 |};
 
 # A type parameter that is a subtype of error `Detail` record type.
