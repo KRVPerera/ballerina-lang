@@ -421,6 +421,11 @@ public class TypeParamAnalyzer {
                     findTypeParam(loc, ((BTypedescType) expType).constraint, ((BTypedescType) actualType).constraint,
                                   env, resolvedTypes, result);
                 }
+            case TypeTags.INTERSECTION:
+                if (actualType.tag == TypeTags.INTERSECTION) {
+                    findTypeParam(loc, ((BIntersectionType) expType).effectiveType,
+                            ((BIntersectionType) actualType).effectiveType, env, resolvedTypes, result);
+                }
         }
     }
 
@@ -732,11 +737,13 @@ public class TypeParamAnalyzer {
             boundTypes.add(getMatchingBoundType(type, env, resolvedTypes));
         }
 
-        BIntersectionType boundInersectionType =
+        BUnionType boundUnion = BUnionType.create(null, boundTypes);
+        BIntersectionType boundIntersectionType =
                 ImmutableTypeCloner.getImmutableIntersectionType(intersectionType.tsymbol.pos, types,
-                BUnionType.create(null, boundTypes), env, symTable, anonymousModelHelper, names, new HashSet<>());
+                        boundUnion, env, symTable, anonymousModelHelper, names,
+                        new HashSet<>());
 
-        return boundInersectionType;
+        return boundIntersectionType.effectiveType;
     }
 
     private BTupleType getMatchingTupleBoundType(BTupleType expType, SymbolEnv env, HashSet<BType> resolvedTypes) {
