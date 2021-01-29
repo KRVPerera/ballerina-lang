@@ -18,7 +18,7 @@ import ballerina/lang.'xml;
 import ballerina/jballerina.java;
 
 function createPipeline(
-        Type[]|map<Type>|record{}|string|xml|table<map<Type>>|stream<Type, ErrorType>|_Iterable collection,
+        Type[]|map<Type>|record{}|string|xml|table<map<Type>>|stream<Type, ErrorType>|Iterable collection,
         typedesc<Type> resType)
             returns _StreamPipeline {
     return new _StreamPipeline(collection, resType);

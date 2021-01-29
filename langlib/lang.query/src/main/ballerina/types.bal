@@ -34,23 +34,22 @@ type Type any|error;
 @typeParam
 type ErrorType error|never;
 
-# An abstract `_Iterator` object.
-type _Iterator object {
-    public isolated function next() returns record {|Type value;|}|ErrorType?;
+# Distinct Iterable type.
+# An object can make itself iterable by using `*object:Iterable;`,
+# and then defining an `iterator` method.
+public type Iterable distinct object {
+    # Create a new iterator.
+    #
+    # + return - a new iterator object
+    public function iterator() returns object {
+        public function next() returns record {| Type value; |}|ErrorType?;
+    };
 };
 
 # An abstract `_CloseableIterator` object.
 type _CloseableIterator object {
     public isolated function next() returns record {|Type value;|}|ErrorType?;
     public isolated function close() returns ErrorType?;
-};
-
-# An abstract `_Iterable` object.
-type _Iterable object {
-    public function __iterator() returns
-        object {
-            public isolated function next() returns record {|Type value;|}|ErrorType?;
-        };
 };
 
 type _StreamFunction object {
@@ -68,7 +67,8 @@ class _StreamPipeline {
     typedesc<Type> resType;
 
     function init(
-            Type[]|map<Type>|record{}|string|xml|table<map<Type>>|stream<Type, ErrorType>|_Iterable collection,
+            Type[]|map<Type>|record{}|string|xml|table<map<Type>>|stream<Type, ErrorType>|Iterable
+            collection,
             typedesc<Type> resType) {
         self.streamFunction = new _InitFunction(collection);
         self.resType = resType;
@@ -102,12 +102,12 @@ class _StreamPipeline {
 
 class _InitFunction {
     *_StreamFunction;
-    _Iterator? itr;
+    Iterable? itr;
     boolean resettable = true;
-    Type[]|map<Type>|record{}|string|xml|table<map<Type>>|stream<Type, ErrorType>|_Iterable collection;
+    Type[]|map<Type>|record{}|string|xml|table<map<Type>>|stream<Type, ErrorType>|Iterable collection;
 
     function init(
-            Type[]|map<Type>|record{}|string|xml|table<map<Type>>|stream<Type, ErrorType>|_Iterable collection) {
+            Type[]|map<Type>|record{}|string|xml|table<map<Type>>|stream<Type, ErrorType>|Iterable collection) {
         self.prevFunc = ();
         self.itr = ();
         self.collection = collection;
@@ -115,7 +115,7 @@ class _InitFunction {
     }
 
     public function process() returns _Frame|error? {
-        _Iterator i = <_Iterator>self.itr;
+        Iterable i = <Iterable>self.itr;
         record {|(any|error) value;|}|error? v = i.next();
         if (v is record {|(any|error) value;|}) {
             record {|(any|error)...;|} _frame = {...v};
@@ -133,8 +133,8 @@ class _InitFunction {
     }
 
     function _getIterator(
-            Type[]|map<Type>|record{}|string|xml|table<map<Type>>|stream<Type, ErrorType>|_Iterable collection)
-                returns _Iterator {
+            Type[]|map<Type>|record{}|string|xml|table<map<Type>>|stream<Type, ErrorType>|Iterable collection)
+                returns Iterable {
         if (collection is Type[]) {
             return lang_array:iterator(collection);
         } else if (collection is record {}) {
@@ -147,8 +147,8 @@ class _InitFunction {
             return lang_xml:iterator(collection);
         } else if (collection is table<map<Type>>) {
             return lang_table:iterator(collection);
-        } else if (collection is _Iterable) {
-            return collection.__iterator();
+        } else if (collection is Iterable) {
+            return collection.iterator();
         } else {
             // stream.iterator() is not resettable.
             self.resettable = false;
@@ -193,7 +193,7 @@ class _InputFunction {
 
 class _NestedFromFunction {
     *_StreamFunction;
-    _Iterator? itr;
+    Iterable? itr;
 
     public function (_Frame frame) returns any|error? collectionFunc;
     _Frame|error? currentFrame;
@@ -213,7 +213,7 @@ class _NestedFromFunction {
         _StreamFunction pf = <_StreamFunction>self.prevFunc;
         function (_Frame frame) returns any|error? collectionFunc = self.collectionFunc;
         _Frame|error? cf = self.currentFrame;
-        _Iterator? itr = self.itr;
+        Iterable? itr = self.itr;
         if (cf is ()) {
             cf = pf.process();
             self.currentFrame = cf;
@@ -225,7 +225,7 @@ class _NestedFromFunction {
                 }
             }
         }
-        if (cf is _Frame && itr is _Iterator) {
+        if (cf is _Frame && itr is Iterable) {
             record {|(any|error) value;|}|error? v = itr.next();
             if (v is record {|(any|error) value;|}) {
                 _Frame _frame = {...cf};
@@ -267,8 +267,8 @@ class _NestedFromFunction {
             return lang_xml:iterator(collection);
         } else if (collection is table<map<Type>>) {
             return lang_table:iterator(collection);
-        } else if (collection is _Iterable) {
-            return collection.__iterator();
+        } else if (collection is Iterable) {
+            return collection.iterator();
         } else if (collection is stream <Type, ErrorType>) {
             return lang_stream:iterator(collection);
         }
@@ -308,7 +308,7 @@ class _LetFunction {
     }
 }
 
-class _InnerJoinFunction {
+class _InnerJoinFunction {object.bal
     *_StreamFunction;
     function (_Frame _frame) returns any lhsKeyFunction;
     function (_Frame _frame) returns any rhsKeyFunction;
