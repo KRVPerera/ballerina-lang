@@ -43,9 +43,10 @@ import static org.testng.Assert.assertTrue;
  *
  * @since 1.0
  */
-public class LangLibArrayTest {
+public class LangLibArrayTest extends BaseTest {
 
-    private CompileResult compileResult;
+    CompileResult compileResult;
+    private static Integer x = 5;
 
     @BeforeClass
     public void setup() {
