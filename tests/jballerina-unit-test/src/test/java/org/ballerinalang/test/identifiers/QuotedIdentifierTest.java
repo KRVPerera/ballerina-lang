@@ -19,6 +19,8 @@ package org.ballerinalang.test.identifiers;
 import org.ballerinalang.test.BCompileUtil;
 import org.ballerinalang.test.BRunUtil;
 import org.ballerinalang.test.CompileResult;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -32,10 +34,21 @@ import static org.testng.Assert.assertEquals;
  */
 public class QuotedIdentifierTest {
 
+    private CompileResult result;
+
+    @BeforeClass
+    public void setup() {
+        result = BCompileUtil.compile("test-src/identifiers/error_as_identifier.bal");
+    }
+
+    @AfterClass
+    public void tearDown() {
+        result = null;
+    }
+
     @Test(dataProvider = "errorAsIdentifierFunctions")
     public void testErrorAsIdentifier(String function) {
-        CompileResult errorTestCompileResult = BCompileUtil.compile("test-src/identifiers/error_as_identifier.bal");
-        BRunUtil.invoke(errorTestCompileResult, function);
+        BRunUtil.invoke(result, function);
     }
 
     @DataProvider(name = "errorAsIdentifierFunctions")
@@ -49,12 +62,6 @@ public class QuotedIdentifierTest {
                 { "testErrorNamedRequiredParam" },
                 { "testErrorNamedRestParam" },
         };
-    }
-
-    @Test(dataProvider = "errorAsIdentifierFunctions")
-    public void testErrorAsIdentifierNegative(String function) {
-        CompileResult errorTestCompileResult = BCompileUtil.compile("test-src/identifiers/error_as_identifier.bal");
-        BRunUtil.invoke(errorTestCompileResult, function);
     }
 
     @Test(description = "Test error as a identifier negative cases")

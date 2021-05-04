@@ -14,8 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// helpers
-
 class ErrorField {
     public error 'error;
     public int 'int;
@@ -30,11 +28,17 @@ type ErrorDataWithErrorField record {
     error 'error;
 };
 
+type ErrorWithErrorField error<ErrorDataWithErrorField>;
+
+type ErrorDataWith record {
+    ErrorWithErrorField 'error;
+};
+
 function getError() returns error {
     return error("Generated Error");
 }
 
-function functionWithErrorNamedDefaultArgument(error 'error = getError()) {
+function functionWithErrorNamedDefaultableParam(error 'error = getError()) {
     assertEquality('error.message(), "Generated Error");
 }
 
@@ -53,8 +57,6 @@ function functionWithErrorNamedRestParam(ErrorDataWithErrorField... 'error) {
 type ErrorDataWithRestError record {|
     error...;
 |};
-
-// test cases
 
 function testErrorAsObjectField() {
     error newError = error("bam", message = "new error");
@@ -78,10 +80,19 @@ function testErrorConstructorWithErrorField() {
     assertEquality(ef.'error.message(), "test message");
     error errorInCtor = <error>ef.'error.detail()["error"];
     assertEquality(errorInCtor.message(), "error as a detail");
+
+    e = error("test message", 'error = error("most inner error"), message = "inner error message");
+    ErrorWithErrorField e2i = error ErrorWithErrorField("inner error", 'error = e);
+    ErrorWithErrorField e2 = error ErrorWithErrorField("error as a detail", 'error = e2i);
+    ErrorDataWithErrorField ef2 = {'error: e2};
+    errorInCtor = (<ErrorDataWithErrorField>ef2.'error.detail()).'error;
+    assertEquality(errorInCtor.message(), "inner error");
+    errorInCtor = (<ErrorWithErrorField>errorInCtor.detail()).'error
+    assertEquality(errorInCtor.message(), "inner error");
 }
 
 function testErrorNamedDefaultArgument() {
-    functionWithErrorNamedDefaultArgument();
+    functionWithErrorNamedDefaultableParam();
 }
 
 function testErrorNamedIncludedParam() {
