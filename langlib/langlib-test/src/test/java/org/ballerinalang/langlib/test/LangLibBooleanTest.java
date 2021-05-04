@@ -41,9 +41,9 @@ import static io.ballerina.runtime.internal.util.exceptions.BallerinaErrorReason
  *
  * @since 1.2.0
  */
-public class LangLibBooleanTest {
+public class LangLibBooleanTest extends BaseTest {
 
-    private CompileResult compileResult;
+    CompileResult compileResult;
 
     @BeforeClass
     public void setup() {
