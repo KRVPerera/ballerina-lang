@@ -211,7 +211,7 @@ public class SymbolEnter extends BLangNodeVisitor {
     private final Types types;
     private final SourceDirectory sourceDirectory;
     private List<BLangNode> unresolvedTypes;
-    private Set<BLangNode> unresolvedRecordDueToFields;
+    private Set<BLangNode> unresolvedRecordsDueToFields;
     private boolean resolveRecordsUnresolvedDueToFields;
     private List<BLangClassDefinition> unresolvedClasses;
     private HashSet<LocationData> unknownTypeRefs;
@@ -523,7 +523,7 @@ public class SymbolEnter extends BLangNodeVisitor {
             @Override
             public int compare(BLangNode l, BLangNode r) {
                 if (l instanceof OrderedNode && r instanceof OrderedNode) {
-                    return ((OrderedNode) l).getPrecedence() - ((OrderedNode) r).getPrecedence();
+                    return ((OrderedNode) r).getPrecedence() - ((OrderedNode) l).getPrecedence();
                 }
                 return 0;
             }
@@ -799,16 +799,26 @@ public class SymbolEnter extends BLangNodeVisitor {
 
         // For each referenced type, check whether the types are already resolved.
         // If not, then that type should get a higher precedence.
+        int unresolvedTypeRefs = 0;
         for (BLangType typeRef : classDefinition.typeRefs) {
             BType referencedType = symResolver.resolveTypeNode(typeRef, env);
-            if (referencedType == symTable.noType && !this.unresolvedTypes.contains(classDefinition)) {
-                this.unresolvedTypes.add(classDefinition);
-                return;
+            if (referencedType == symTable.noType) {
+                unresolvedTypeRefs++;
+                continue;
             }
             objectType.typeInclusions.add(referencedType);
         }
 
-        classDefinition.setPrecedence(this.typePrecedence++);
+        if (unresolvedTypeRefs > 0) {
+            if (!this.unresolvedTypes.contains(classDefinition)) {
+                this.unresolvedTypes.add(classDefinition);
+            }
+            this.typePrecedence++;
+            classDefinition.setPrecedence(this.typePrecedence + unresolvedTypeRefs);
+            return;
+        }
+
+        classDefinition.setPrecedence(this.typePrecedence--);
         if (symResolver.checkForUniqueSymbol(classDefinition.pos, env, tSymbol)) {
             env.scope.define(tSymbol.name, tSymbol);
         }
@@ -1100,9 +1110,10 @@ public class SymbolEnter extends BLangNodeVisitor {
             return;
         }
 
+        typeDefs.sort(getTypePrecedenceComparator());
         this.unresolvedTypes = new ArrayList<>();
-        this.unresolvedRecordDueToFields = new HashSet<>();
-        this.resolveRecordsUnresolvedDueToFields = false;
+//        this.unresolvedRecordsDueToFields = new HashSet<>();
+//        this.resolveRecordsUnresolvedDueToFields = false;
         for (BLangNode typeDef : typeDefs) {
             if (isErrorIntersectionType(typeDef, env)) {
                 populateUndefinedErrorIntersection((BLangTypeDefinition) typeDef, env);
@@ -1114,12 +1125,12 @@ public class SymbolEnter extends BLangNodeVisitor {
 
         if (typeDefs.size() <= unresolvedTypes.size()) {
 
-            this.resolveRecordsUnresolvedDueToFields = true;
-            unresolvedTypes.removeAll(unresolvedRecordDueToFields);
-            for (BLangNode unresolvedType : unresolvedRecordDueToFields) {
-                defineNode(unresolvedType, env);
-            }
-            this.resolveRecordsUnresolvedDueToFields = false;
+//            this.resolveRecordsUnresolvedDueToFields = true;
+//            unresolvedTypes.removeAll(unresolvedRecordsDueToFields);
+//            for (BLangNode unresolvedType : unresolvedRecordsDueToFields) {
+//                defineNode(unresolvedType, env);
+//            }
+//            this.resolveRecordsUnresolvedDueToFields = false;
 
             // This situation can occur due to either a cyclic dependency or at least one of member types in type
             // definition node cannot be resolved. So we iterate through each node recursively looking for cyclic
@@ -1402,6 +1413,7 @@ public class SymbolEnter extends BLangNodeVisitor {
         }
 
         // Check for any circular type references
+        int unresolvedTypeRefs = 0;
         if (typeDefinition.typeNode.getKind() == NodeKind.OBJECT_TYPE ||
                 typeDefinition.typeNode.getKind() == NodeKind.RECORD_TYPE) {
             BLangStructureTypeNode structureTypeNode = (BLangStructureTypeNode) typeDefinition.typeNode;
@@ -1410,27 +1422,30 @@ public class SymbolEnter extends BLangNodeVisitor {
             for (BLangType typeRef : structureTypeNode.typeRefs) {
                 BType referencedType = symResolver.resolveTypeNode(typeRef, env);
                 if (referencedType == symTable.noType) {
-                    if (!this.unresolvedTypes.contains(typeDefinition)) {
-                        this.unresolvedTypes.add(typeDefinition);
-                        return;
-                    }
+                    unresolvedTypeRefs++;
                 }
             }
         }
 
+        int dependencyCount = 0;
         // check for unresolved fields. This record may be referencing another record
-        if (!this.resolveRecordsUnresolvedDueToFields &&
-                typeDefinition.typeNode.getKind() == NodeKind.RECORD_TYPE) {
+        if (typeDefinition.typeNode.getKind() == NodeKind.RECORD_TYPE) {
             BLangStructureTypeNode structureTypeNode = (BLangStructureTypeNode) typeDefinition.typeNode;
             for (BLangSimpleVariable variable : structureTypeNode.fields) {
                 BType referencedType = symResolver.resolveTypeNode(variable.typeNode, env);
                 if (referencedType == symTable.noType) {
-                    if (this.unresolvedRecordDueToFields.add(typeDefinition)) {
-                        this.unresolvedTypes.add(typeDefinition);
-                        return;
-                    }
+                    dependencyCount++;
                 }
             }
+        }
+
+        if (unresolvedTypeRefs > 0 || dependencyCount > 0) {
+            if (!this.unresolvedTypes.contains(typeDefinition)) {
+                this.unresolvedTypes.add(typeDefinition);
+            }
+            this.typePrecedence++;
+            typeDefinition.setPrecedence(this.typePrecedence + dependencyCount + unresolvedTypeRefs);
+            return;
         }
 
         if (typeDefinition.typeNode.getKind() == NodeKind.FUNCTION_TYPE && definedType.tsymbol == null) {
@@ -1443,7 +1458,7 @@ public class SymbolEnter extends BLangNodeVisitor {
             definedType.tsymbol = createEnumSymbol(typeDefinition, definedType);
         }
 
-        typeDefinition.setPrecedence(this.typePrecedence++);
+        typeDefinition.setPrecedence(this.typePrecedence--);
         BTypeSymbol typeDefSymbol;
         if (definedType.tsymbol.name != Names.EMPTY) {
             typeDefSymbol = definedType.tsymbol.createLabelSymbol();
