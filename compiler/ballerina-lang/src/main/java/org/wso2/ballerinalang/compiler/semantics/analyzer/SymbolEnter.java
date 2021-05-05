@@ -1119,6 +1119,7 @@ public class SymbolEnter extends BLangNodeVisitor {
             for (BLangNode unresolvedType : unresolvedRecordDueToFields) {
                 defineNode(unresolvedType, env);
             }
+            this.resolveRecordsUnresolvedDueToFields = false;
 
             // This situation can occur due to either a cyclic dependency or at least one of member types in type
             // definition node cannot be resolved. So we iterate through each node recursively looking for cyclic
@@ -1424,7 +1425,7 @@ public class SymbolEnter extends BLangNodeVisitor {
             for (BLangSimpleVariable variable : structureTypeNode.fields) {
                 BType referencedType = symResolver.resolveTypeNode(variable.typeNode, env);
                 if (referencedType == symTable.noType) {
-                    if (!this.unresolvedRecordDueToFields.add(typeDefinition)) {
+                    if (this.unresolvedRecordDueToFields.add(typeDefinition)) {
                         this.unresolvedTypes.add(typeDefinition);
                         return;
                     }
