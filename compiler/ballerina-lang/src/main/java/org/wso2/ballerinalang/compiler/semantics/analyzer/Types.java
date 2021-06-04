@@ -397,7 +397,7 @@ public class Types {
         }
         BType intersectionType = getTypeIntersection(
                 IntersectionContext.compilerInternalIntersectionContext(),
-                matchExpr.type, errorBindingPattern.type, env);
+                matchExpr.type, errorBindingPattern.type, env, new LinkedHashSet<>());
         if (intersectionType == symTable.semanticError) {
             return symTable.noType;
         }
@@ -414,7 +414,7 @@ public class Types {
         BType matchExprType = varBindingPatternMatchPattern.matchExpr.type;
         BType intersectionType = getTypeIntersection(
                 IntersectionContext.compilerInternalIntersectionContext(),
-                matchExprType, listBindingPatternType, env);
+                matchExprType, listBindingPatternType, env, new LinkedHashSet<>());
         if (intersectionType != symTable.semanticError) {
             return intersectionType;
         }
@@ -429,7 +429,7 @@ public class Types {
         BType matchExprType = listMatchPattern.matchExpr.type;
         BType intersectionType = getTypeIntersection(
                 IntersectionContext.compilerInternalIntersectionContext(),
-                matchExprType, listMatchPatternType, env);
+                matchExprType, listMatchPatternType, env, new LinkedHashSet<>());
         if (intersectionType != symTable.semanticError) {
             return intersectionType;
         }
@@ -513,7 +513,7 @@ public class Types {
         }
         BType intersectionType = getTypeIntersection(
                 IntersectionContext.compilerInternalIntersectionContext(),
-                mappingMatchPattern.matchExpr.type, patternType, env);
+                mappingMatchPattern.matchExpr.type, patternType, env, new LinkedHashSet<>());
         if (intersectionType == symTable.semanticError) {
             return symTable.noType;
         }
@@ -530,7 +530,7 @@ public class Types {
         BType intersectionType = getTypeIntersection(
                 IntersectionContext.compilerInternalIntersectionContext(),
                 varBindingPatternMatchPattern.matchExpr.type,
-                mappingBindingPatternType, env);
+                mappingBindingPatternType, env, new LinkedHashSet<>());
         if (intersectionType == symTable.semanticError) {
             return symTable.noType;
         }
@@ -2150,9 +2150,10 @@ public class Types {
 
         // Disallow casting away error, this forces user to handle the error via type-test, check, or checkpanic
         IntersectionContext intersectionContext = IntersectionContext.compilerInternalIntersectionTestContext();
-        BType errorIntersection = getTypeIntersection(intersectionContext, sourceType, symTable.errorType, env);
+        BType errorIntersection = getTypeIntersection(intersectionContext, sourceType, symTable.errorType, env,
+                new LinkedHashSet<>());
         if (errorIntersection != symTable.semanticError &&
-                getTypeIntersection(intersectionContext, symTable.errorType, targetType, env)
+                getTypeIntersection(intersectionContext, symTable.errorType, targetType, env, new LinkedHashSet<>())
                         == symTable.semanticError) {
             return false;
         }
@@ -2172,7 +2173,7 @@ public class Types {
         // Use instanceof to check for anydata and json.
         if (sourceType instanceof BUnionType) {
             if (getTypeForUnionTypeMembersAssignableToType((BUnionType) sourceType, targetType, env,
-                    intersectionContext)
+                    intersectionContext, new LinkedHashSet<>())
                     != symTable.semanticError) {
                 // string|typedesc v1 = "hello world";
                 // json|table<Foo> v2 = <json|table<Foo>> v1;
@@ -2183,7 +2184,7 @@ public class Types {
         // Use instanceof to check for anydata and json.
         if (targetType instanceof BUnionType) {
             if (getTypeForUnionTypeMembersAssignableToType((BUnionType) targetType, sourceType, env,
-                    intersectionContext)
+                    intersectionContext, new LinkedHashSet<>())
                     != symTable.semanticError) {
                 // string|int v1 = "hello world";
                 // string|boolean v2 = <string|boolean> v1;
@@ -3479,18 +3480,24 @@ public class Types {
      * Method to retrieve a type representing all the member types of a union type that are assignable to
      * the target type.
      *
-     * @param intersectionContext
      * @param unionType  the union type
      * @param targetType the target type
+     * @param intersectionContext
+     * @param visitedTypes cache to capture visited types
      * @return           a single type or a new union type if at least one member type of the union type is
      *                      assignable to targetType, else semanticError
      */
     BType getTypeForUnionTypeMembersAssignableToType(BUnionType unionType, BType targetType, SymbolEnv env,
-                                                     IntersectionContext intersectionContext) {
+                                                     IntersectionContext intersectionContext,
+                                                     LinkedHashSet<BType> visitedTypes) {
         List<BType> intersection = new LinkedList<>();
+        if (!visitedTypes.add(unionType)) {
+            return unionType;
+        }
 
         unionType.getMemberTypes().forEach(memType -> {
-            BType memberIntersectionType = getTypeIntersection(intersectionContext, memType, targetType, env);
+            BType memberIntersectionType = getTypeIntersection(intersectionContext, memType, targetType, 
+                        env, visitedTypes);
             if (memberIntersectionType != symTable.semanticError) {
                 intersection.add(memberIntersectionType);
             }
@@ -4091,11 +4098,12 @@ public class Types {
     }
 
     public BType getTypeIntersection(IntersectionContext intersectionContext, BType lhsType, BType rhsType,
-                                     SymbolEnv env) {
+                                     SymbolEnv env,
+                                     LinkedHashSet<BType> visitedTypes) {
         List<BType> rhsTypeComponents = getAllTypes(rhsType);
-        LinkedHashSet<BType> intersection = new LinkedHashSet<>();
+        LinkedHashSet<BType> intersection = new LinkedHashSet<>(rhsTypeComponents.size());
         for (BType rhsComponent : rhsTypeComponents) {
-            BType it = getIntersection(intersectionContext, lhsType, env, rhsComponent);
+            BType it = getIntersection(intersectionContext, lhsType, env, rhsComponent, visitedTypes);
             if (it != null) {
                 intersection.add(it);
             }
@@ -4115,7 +4123,8 @@ public class Types {
         }
     }
 
-    private BType getIntersection(IntersectionContext intersectionContext, BType lhsType, SymbolEnv env, BType type) {
+    private BType getIntersection(IntersectionContext intersectionContext, BType lhsType, SymbolEnv env, BType type,
+                                  LinkedHashSet<BType> visitedTypes) {
         lhsType = getEffectiveTypeForIntersection(lhsType);
         type = getEffectiveTypeForIntersection(type);
 
@@ -4166,19 +4175,19 @@ public class Types {
             }
         } else if (lhsType.tag == TypeTags.UNION) {
             BType intersectionType = getTypeForUnionTypeMembersAssignableToType((BUnionType) lhsType, type, env,
-                    intersectionContext);
+                    intersectionContext, visitedTypes);
             if (intersectionType != symTable.semanticError) {
                 return intersectionType;
             }
         } else if (type.tag == TypeTags.UNION) {
             BType intersectionType = getTypeForUnionTypeMembersAssignableToType((BUnionType) type, lhsType, env,
-                    intersectionContext);
+                    intersectionContext, visitedTypes);
             if (intersectionType != symTable.semanticError) {
                 return intersectionType;
             }
         } else if (type.tag == TypeTags.MAP && lhsType.tag == TypeTags.MAP) {
             BType intersectionConstraintTypeType = getIntersection(intersectionContext, ((BMapType) lhsType).constraint,
-                                                                   env, ((BMapType) type).constraint);
+                                                                   env, ((BMapType) type).constraint, visitedTypes);
             if (intersectionConstraintTypeType == null || intersectionConstraintTypeType == symTable.semanticError) {
                 return null;
             }
@@ -4214,9 +4223,9 @@ public class Types {
                 return intersectionType;
             }
         } else if (isAnydataOrJson(type) && lhsType.tag == TypeTags.MAP) {
-            return getIntersection(intersectionContext, lhsType, env, getMapTypeForAnydataOrJson(type));
+            return getIntersection(intersectionContext, lhsType, env, getMapTypeForAnydataOrJson(type), visitedTypes);
         } else if (type.tag == TypeTags.MAP && isAnydataOrJson(lhsType)) {
-            return getIntersection(intersectionContext, getMapTypeForAnydataOrJson(lhsType), env, type);
+            return getIntersection(intersectionContext, getMapTypeForAnydataOrJson(lhsType), env, type, visitedTypes);
         } else if (isAnydataOrJson(type) && lhsType.tag == TypeTags.TUPLE) {
             BType intersectionType = createArrayAndTupleIntersection(intersectionContext,
                     getArrayTypeForAnydataOrJson(type), (BTupleType) lhsType, env);
@@ -4231,13 +4240,14 @@ public class Types {
             }
         } else if (isAnydataOrJson(type) && lhsType.tag == TypeTags.ARRAY) {
             BType elementIntersection = getIntersection(intersectionContext, ((BArrayType) lhsType).eType, env,
-                                                        type);
+                                                        type, visitedTypes);
             if (elementIntersection == null) {
                 return elementIntersection;
             }
             return new BArrayType(elementIntersection);
         } else if (type.tag == TypeTags.ARRAY && isAnydataOrJson(lhsType)) {
-            BType elementIntersection = getIntersection(intersectionContext, lhsType, env, ((BArrayType) type).eType);
+            BType elementIntersection = getIntersection(intersectionContext, lhsType, env, ((BArrayType) type).eType,
+                    visitedTypes);
             if (elementIntersection == null) {
                 return elementIntersection;
             }
@@ -4305,7 +4315,8 @@ public class Types {
         List<BType> tupleMemberTypes = new ArrayList<>();
         BType eType = arrayType.eType;
         for (BType memberType : tupleTypes) {
-            BType intersectionType = getTypeIntersection(intersectionContext, memberType, eType, env);
+            BType intersectionType = getTypeIntersection(intersectionContext, memberType, eType, env,
+                    new LinkedHashSet<>());
             if (intersectionType == symTable.semanticError) {
                 return symTable.semanticError;
             }
@@ -4316,7 +4327,8 @@ public class Types {
             return new BTupleType(null, tupleMemberTypes);
         }
 
-        BType restIntersectionType = getTypeIntersection(intersectionContext, tupleType.restType, eType, env);
+        BType restIntersectionType = getTypeIntersection(intersectionContext, tupleType.restType, eType, env,
+                new LinkedHashSet<>());
         if (restIntersectionType == symTable.semanticError) {
             return new BTupleType(null, tupleMemberTypes);
         }
@@ -4343,7 +4355,8 @@ public class Types {
         List<BType> tupleMemberTypes = new ArrayList<>();
         for (int i = 0; i < tupleTypes.size(); i++) {
             BType lhsType = (lhsTupleTypes.size() > i) ? lhsTupleTypes.get(i) : lhsTupleType.restType;
-            BType intersectionType = getTypeIntersection(intersectionContext, tupleTypes.get(i), lhsType, env);
+            BType intersectionType = getTypeIntersection(intersectionContext, tupleTypes.get(i), lhsType, env,
+                    new LinkedHashSet<>());
             if (intersectionType == symTable.semanticError) {
                 return symTable.semanticError;
             }
@@ -4352,7 +4365,7 @@ public class Types {
 
         if (lhsTupleType.restType != null && tupleType.restType != null) {
             BType restIntersectionType = getTypeIntersection(intersectionContext, tupleType.restType,
-                    lhsTupleType.restType, env);
+                    lhsTupleType.restType, env, new LinkedHashSet<>());
             if (restIntersectionType == symTable.semanticError) {
                 return new BTupleType(null, tupleMemberTypes);
             }
@@ -4373,7 +4386,8 @@ public class Types {
             return symTable.semanticError;
         }
 
-        BType detailIntersectionType = getTypeIntersection(intersectionContext, detailTypeOne, detailTypeTwo, env);
+        BType detailIntersectionType = getTypeIntersection(intersectionContext, detailTypeOne, detailTypeTwo, env,
+                new LinkedHashSet<>());
         if (detailIntersectionType == symTable.semanticError) {
             return symTable.semanticError;
         }
@@ -4425,7 +4439,7 @@ public class Types {
         }
 
         BType restFieldType = getTypeIntersection(intersectionContext, effectiveRecordOneRestFieldType,
-                effectiveRecordTwoRestFieldType, env);
+                effectiveRecordTwoRestFieldType, env, new LinkedHashSet<>());
         if (setRestType(newType, restFieldType) == symTable.semanticError) {
             return symTable.semanticError;
         }
@@ -4485,7 +4499,7 @@ public class Types {
                 }
 
                 intersectionFieldType = getIntersection(intersectionContext, recordOneFieldType, env,
-                                                        effectiveRhsRecordRestFieldType);
+                                                        effectiveRhsRecordRestFieldType, new LinkedHashSet<>());
 
                 if (intersectionFieldType == null || intersectionFieldType == symTable.semanticError) {
                     if (Symbols.isFlagOn(lhsRecordField.symbol.flags, Flags.OPTIONAL)) {
@@ -4497,7 +4511,7 @@ public class Types {
             } else {
                 BField rhsRecordField = rhsRecordFields.get(key);
                 intersectionFieldType = getIntersection(intersectionContext, recordOneFieldType, env,
-                                                        rhsRecordField.type);
+                                                        rhsRecordField.type, new LinkedHashSet<>());
 
                 long rhsFieldFlags = rhsRecordField.symbol.flags;
                 if (Symbols.isFlagOn(rhsFieldFlags, Flags.READONLY)) {
@@ -4700,7 +4714,8 @@ public class Types {
             return origField.type;
         }
 
-        BType fieldType = getTypeIntersection(intersectionContext, origField.type, constraint, env);
+        BType fieldType = getTypeIntersection(intersectionContext, origField.type, constraint, env,
+                new LinkedHashSet<>());
         if (fieldType.tag == TypeTags.NEVER && !Symbols.isOptional(origField.symbol)) {
             return symTable.semanticError;
         }

@@ -1999,7 +1999,7 @@ public class DataflowAnalyzer extends BLangNodeVisitor {
     private void addVarIfInferredTypeIncludesError(BLangSimpleVariable variable) {
         BType typeIntersection =
                 types.getTypeIntersection(Types.IntersectionContext.compilerInternalIntersectionContext(),
-                                          variable.type, symTable.errorType, env);
+                                          variable.type, symTable.errorType, env, new LinkedHashSet<>());
         if (typeIntersection != null &&
                 typeIntersection != symTable.semanticError && typeIntersection != symTable.noType) {
             unusedErrorVarsDeclaredWithVar.put(variable.symbol, variable.pos);

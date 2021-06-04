@@ -2451,7 +2451,7 @@ public class SemanticAnalyzer extends BLangNodeVisitor {
         BType bindingPatternType = wildCardBindingPattern.type;
         BType intersectionType = types.getTypeIntersection(
                 Types.IntersectionContext.compilerInternalIntersectionContext(),
-                bindingPatternType, symTable.anyType, this.env);
+                bindingPatternType, symTable.anyType, this.env, new LinkedHashSet<>());
         if (intersectionType == symTable.semanticError) {
             wildCardBindingPattern.type = symTable.noType;
             return;
@@ -2480,7 +2480,7 @@ public class SemanticAnalyzer extends BLangNodeVisitor {
         }
         BTupleType listBindingPatternType = new BTupleType(listMemberTypes);
 
-        if (listBindingPattern.restBindingPattern != null) {
+        if (listBindingPattern.restBindingPattern != null) {Types.java:3487
             BLangRestBindingPattern restBindingPattern = listBindingPattern.restBindingPattern;
             BType restType = symTable.anyOrErrorType;
             restBindingPattern.type = new BArrayType(restType);
@@ -2867,7 +2867,7 @@ public class SemanticAnalyzer extends BLangNodeVisitor {
 
         BType intersectionType = types.getTypeIntersection(
                 Types.IntersectionContext.compilerInternalIntersectionContext(),
-                matchExprType, symTable.anyType, this.env);
+                matchExprType, symTable.anyType, this.env, new LinkedHashSet<>());
         if (intersectionType == symTable.semanticError) {
             wildCardMatchPattern.type = symTable.noType;
             return;
